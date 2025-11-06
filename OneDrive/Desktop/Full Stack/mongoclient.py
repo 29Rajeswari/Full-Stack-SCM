@@ -14,7 +14,6 @@ def login(email:str,password:str):
 @app.get("/hi")
 def root():
     return {"Hello": "hi"}
-
 client = MongoClient("mongodb://localhost:27017")  # replace with your Mongo URI
 db = client["mydatabase"]  # your database name
 
