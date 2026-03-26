@@ -1,0 +1,120 @@
+
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.whl
+dist/
+build/
+
+# ================================
+# Virtual Environments
+# ================================
+venv/
+.venv/
+env/
+ENV/
+.python-version
+
+# ================================
+# Environment Variables
+# ================================
+.env
+.env.*
+!.env.example
+.env.example
+# ================================
+# Logs
+# ================================
+*.log
+logs/
+*.out
+
+# ================================
+# Jupyter
+# ================================
+.ipynb_checkpoints/
+
+# ================================
+# OS Files
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================================
+# IDE
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ================================
+# Node / React
+# ================================
+frontend/node_modules/
+frontend/.next/
+frontend/build/
+frontend/dist/
+frontend/.env
+
+# ================================
+# Database
+# ================================
+data/raw/
+data/processed/
+data/vector_db/
+mongo_data/
+
+# ================================
+# Chroma / Embeddings
+# ================================
+*.chroma
+*.faiss
+.cache/
+.cache/chroma/
+
+# ================================
+# Docker
+# ================================
+*.pid
+docker-compose.override.yml
+
+# ================================
+# Test Artifacts
+# ================================
+.pytest_cache/
+coverage/
+htmlcov/
+
+# ================================
+# Temp Files
+# ================================
+*.tmp
+*.bak
+*.swp
+*.old
+*.orig
+=======
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+

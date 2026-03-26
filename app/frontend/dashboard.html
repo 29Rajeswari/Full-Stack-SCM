@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
+    <title>Modern Form</title>
+    <style>
+      @charset "UTF-8";
+      /* Top Navigation Bar */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 30px 40px;
+        gap: 40px;
+        box-sizing: border-box;
+        background: rgba(255,255,255,0.02);
+      }
+
+      .brand img {
+        height: 50px;
+        border-radius: 5px;
+        box-shadow: 0 4px 12px rgba(185, 231, 232, 0.2);
+      }
+
+      .nav-menu {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-menu a, .logout-btn {
+      color: #520acf;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+      background: #d9d7de(255,255,255,0.3);
+      box-shadow: 0 4px 10px #673AB7;
+    }
+
+    .nav-menu a:hover, .logout-btn:hover {
+      background: linear-gradient(90deg, #a327ae, #36b1f4);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(39,174,96,0.4);
+      transform: translateY(-2px);
+    }
+
+      .nav-menu a.active {
+        background: linear-gradient(90deg, #7b2cbf, #1fa2f3);
+        color: #fff;
+      }
+
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        width: 100% !important;
+        box-sizing: border-box;
+        font-family: "Roboto", sans-serif;
+      }
+
+      .canvas-back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
+        z-index: 0;
+      }
+
+      #slideBox {
+        width: 50%;
+        max-height: 100%;
+        height: 100%;
+        overflow: hidden;
+        margin-left:50%;
+        position: absolute;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      }
+    
+      .topLayer {
+        width: 200%;
+        height: 800%;
+        position: relative;
+        left: -100%;
+      }
+
+      label {
+        font-size: 1.9em;
+        text-transform: uppercase;
+      }
+
+      input {
+        background-color: transparent;
+        border: 0;
+        outline: 0;
+        font-size: 1em;
+        padding: 8px 1px;
+        margin-top: 0.1em;
+      }
+
+      .left {
+        width: 50%;
+        height: 80%;
+        overflow: scroll;
+        background: #673AB7;
+        left: 0;
+        position: absolute;
+      }
+      .left label {
+        color: #e3e3e3;
+      }
+      .left input {
+        border-bottom: 1px solid #e3e3e3;
+        color: #e3e3e3;
+      }
+      .left input:focus, .left input:active {
+        border-color: #03A9F4;
+        color: #03A9F4;
+      }
+      .left input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 30px #2C3034 inset;
+        -webkit-text-fill-color: #e3e3e3;
+      }
+      .left a {
+        color: #35302f;
+      }
+
+      .right {
+        width: 50%;
+        height: 80%;
+        overflow: scroll;
+        background:   #03A9F4;
+        right: 0;
+        position: absolute;
+      }
+      .right label {
+        color: #212121;
+      }
+      .right input {
+        border-bottom: 1px solid #212121;
+      }
+      .right input:focus, .right input:active {
+        border-color: #673AB7;
+      }
+      .right input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 30px #f9f9f9 inset;
+        -webkit-text-fill-color: #212121;
+      }
+
+      .content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100%;
+        width: 80%;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .content h2 {
+        font-weight: 300;
+        font-size: 2.6em;
+        margin: 0.2em 0 0.1em;
+      }
+
+      .left .content h2 {
+        color: #e5efeb;
+      }
+
+      .right .content h2 {
+        color: #080112dd;
+      }
+
+      .form-element {
+        margin: 2em 0;
+      }
+      .form-element.form-submit {
+        margin: 2em 0 0;
+      }
+
+      .form-stack {
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Checkbox styling – now white when unchecked, changes when checked */
+      .checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        outline: none;
+        background-color: #ffffff;      /* 🔁 pure white */
+        border: 2px solid #e3e3e3;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05),
+                    inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05);
+        padding: 12px;
+        border-radius: 9px;
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .checkbox:focus, .checkbox:checked:focus,
+      .checkbox:active, .checkbox:checked:active {
+        border-color: #03A9F4;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05),
+                    inset 0px 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .checkbox:checked {
+        background-color: #03A9F4;      /* 🔁 blue when checked */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05),
+                    inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05),
+                    inset 15px 10px -12px rgba(255, 255, 255, 0.1);
+      }
+
+      .checkbox:checked:after {
+        content: "✓";
+        color: #ffffff;
+        font-size: 1.4em;
+        font-weight: 900;
+        position: absolute;
+        top: -4px;
+        left: 4px;
+      }
+
+      .form-checkbox {
+        display: flex;
+        align-items: center;
+      }
+      .form-checkbox label {
+        margin: 0 6px 0;
+        font-size: 1em;
+      }
+
+      button {
+        padding: 0.8em 1.2em;
+        margin: 0 10px 0 0;
+        width: auto;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 1em;
+        color: #0e0b0b;
+        line-height: 1em;
+        letter-spacing: 0.6px;
+        border-radius: 3px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.1);
+        border: 0;
+        outline: 0;
+        transition: all 0.25s;
+        background: #ffffff;
+      }
+      button.signup {
+        background: #03A9F4;
+      }
+      button.login {
+        background: #673AB7;
+      }
+      button.off {
+        background: none;
+        box-shadow: none;
+        margin: 0;
+      }
+      button.off.signup {
+        color: #03A9F4;
+      }
+      button.off.login {
+        color: #673AB7;
+      }
+
+      button:focus, button:active, button:hover {
+        box-shadow: 0 4px 7px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.1);
+      }
+      button:focus.signup, button:active.signup, button:hover.signup {
+        background: #0288D1;
+      }
+      button:focus.login, button:active.login, button:hover.login {
+        background: #512DA8;
+      }
+      button:focus.off, button:active.off, button:hover.off {
+        box-shadow: none;
+      }
+      button:focus.off.signup, button:active.off.signup, button:hover.off.signup {
+        color: #03A9F4;
+        background: #212121;
+      }
+      button:focus.off.login, button:active.off.login, button:hover.off.login {
+        color: #512DA8;
+        background: #e3e3e3;
+      }
+
+      @media only screen and (max-width: 768px) {
+        #slideBox {
+          width: 80%;
+          margin-left: 20%;
+        }
+
+        .signup-info, .login-info {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Top Navigation Bar -->
+    <header class="topbar" role="navigation" aria-label="Main navigation">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo" />
+      </div>
+
+      <nav class="nav-menu" role="menubar" aria-label="Primary">
+        <a href="/frontend/dashboard.html" role="menuitem"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+        <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+        <a href="/frontend/device.html" role="menuitem"><i class="fa fa-microchip"></i> Device Data</a>
+        <a href="/frontend/users.html" role="menuitem"><i class="fa fa-sign-in-alt"></i> Sign In</a>
+        <a class="logout-btn" href="/logout" role="menuitem"><i class="fa fa-sign-out-alt"></i> Log out</a>
+      </nav>
+    </header>
+
+    <div id="back">
+      <canvas id="canvas" class="canvas-back"></canvas>
+      <div class="backRight"></div>
+      <div class="backLeft"></div>
+    </div>
+
+    <div class="left" style="scrollbar-width: none;">
+      <div class="content">
+        <h2>Create a new shipment</h2>
+        <form id="form-create" method="post" onsubmit="return false;">
+          <div class="form-element form-submit">
+            <button id="new-shipment" class="signup">
+              <a href="/frontend/createshipments.html" role="menuitem" style="color:inherit;text-decoration:none;"><i class="fa fa-plus"></i>NEW SHIPMENTS</a>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="right" style="scrollbar-width: none;">
+      <div class="content">
+        <h2>Create a device data</h2>
+        <form id="form-login" method="post" onsubmit="return false;">
+          <div class="form-element form-submit">
+            <button id="device-data" class="login">
+              <a href="/frontend/device.html" role="menuitem" style="color:inherit;text-decoration:none;"><i class="fa fa-plus"></i>DEVICE DATA</a>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // (Optional) your Paper.js animation or other JS can go here.
+    </script>
+  </body>
+</html>
