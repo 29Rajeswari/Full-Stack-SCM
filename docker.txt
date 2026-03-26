@@ -1,0 +1,13 @@
+from  3.13 slim . alpine
+ sudo ---------
+
+.env 
+
+ app -= 
+ health check
+
+
+   main.py , frontend serve
+d.p   
+d.checkcompose.yml 
+

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Logout — SCMXpertLite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Fonts & icons -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    /***** SAME STYLE FAMILY AS YOUR DEVICE PAGE *****/
+
+    /* (from your comment – left as-is) 
+    body {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background-color: #000000; 
+      background-image: url('static/OIP(10).jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+    */
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background-color: #f7f2f2;
+      background-image: url('static/OIP(10).jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 50px;
+    }
+
+    .dashboard-container {
+      background: 673AB7(104, 45, 141, 0.486); /* kept same as your file */
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px 0 rgba(151, 47, 182, 0.852);
+      width: 90%;
+      max-width: 1000px;
+      padding: 100px 200px;
+      color: #080404;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 50px;
+    }
+
+    .brand img {
+      height: 100px;
+      border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(185, 231, 232, 0.2);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-menu a,
+    .logout-btn {
+      color: #520acf;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+      cursor: pointer;
+      background: #d9d7de(255,255,255,0.3);
+      box-shadow: 0 4px 10px #673AB7;
+      border: none;
+    }
+
+    .nav-menu a:hover,
+    .logout-btn:hover {
+      background: linear-gradient(90deg, #a327ae, #36b1f4);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(39,174,96,0.4);
+      transform: translateY(-2px);
+    }
+
+    .nav-menu a.hover {
+      background: linear-gradient(90deg, #a327ae, #36b1f4);
+      color: #fff;
+    }
+
+    /* Headings & text (same style family) */
+    .content h2 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: #090009;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 3px rgba(238, 231, 231, 0.4);
+    }
+
+    .form-note {
+      font-size: 1.1rem;
+      color: #030006;
+      margin-bottom: 18px;
+      font-weight: 600;
+    }
+
+    /* Buttons: same gradient style as your other page */
+    .form-actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    button.btn-primary,
+    button.btn-danger,
+    a.btn-primary,
+    a.btn-danger {
+      padding: 14px 36px;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 5px 20px #7857b2;
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 15px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #9a64c7, #6c0bb1);
+      color: rgb(224, 204, 204);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #1e8449, #2980b9);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(39,174,96,0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(90deg, #15bcda, #54c4a8);
+      color: #673AB7;
+      box-shadow: 0 6px 20px rgba(239, 238, 237, 0.25);
+    }
+    .btn-danger:hover {
+      background: linear-gradient(90deg, #c9e59c, #eceae8);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(136, 185, 205, 0.4);
+    }
+
+    /* Logout panel (new, but matches your glass style) */
+    .logout-panel {
+      background: rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 30px 28px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .logout-panel p.main-text {
+      font-size: 1.05rem;
+      margin: 10px 0 6px;
+    }
+
+    .logout-panel p.sub-text {
+      font-size: 0.95rem;
+      color: #333;
+      margin: 0 0 10px;
+    }
+
+    .logout-icon {
+      font-size: 3rem;
+      color: #9a64c7;
+      margin-bottom: 8px;
+      text-shadow: 0 4px 14px rgba(74, 20, 140, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding: 20px 16px;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .nav-menu {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .form-actions {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top Navigation Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo" />
+      </div>
+      <nav class="nav-menu">
+        <a href="/frontend/device.html"><i class="fa fa-microchip"></i> Device Data</a>
+        <a href="/frontend/users.html" class="active"><i class="fa fa-sign-out-alt"></i> Logout</a>
+      </nav>
+    </header>
+
+    <!-- Logout Content -->
+    <main class="content">
+      <div class="logout-panel">
+        <div class="logout-icon">
+          <i class="fa fa-sign-out-alt"></i>
+        </div>
+        <h2>Ready to log out?</h2>
+        <p class="main-text">
+          You are about to sign out from <strong>SCMXpertLite</strong>.
+        </p>
+        <p class="sub-text">
+          Any unsaved changes may be lost. You can always log in again to continue tracking your shipments and devices.
+        </p>
+
+        <div class="form-actions">
+          <!-- Confirm logout -->
+          <a href="/frontend/users.html" class="btn-primary">
+            <i class="fa fa-check"></i> Yes, Log Me Out
+          </a>
+
+          <!-- Cancel & go back -->
+          <a href="/frontend/dashboard.html" class="btn-danger">
+            <i class="fa fa-arrow-left"></i> Cancel & Go Back
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,272 @@
+#shipments.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Shipments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background-color: #c6b4b4;
+      background-image: url('/static/OIP(10).jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+
+    .dashboard-container {
+      background: rgba(158, 125, 179, 0.486);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px 0 rgba(151, 47, 182, 0.852);
+      width: 90%;
+      max-width: 100%;
+      padding: 30px 40px 40px 40px;
+      color: #080404;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .brand img {
+      height: 60px;
+      border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(185, 231, 232, 0.2);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-menu a,
+    .logout-btn {
+      color: #520acf;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 10px rgba(103, 58, 183, 0.4);
+    }
+
+    .nav-menu a:hover,
+    .logout-btn:hover {
+      background: linear-gradient(90deg, #a327ae, #36b1f4);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .nav-menu a.active {
+      background: linear-gradient(90deg, #9c27b0, #673ab7);
+      color: #fff;
+    }
+
+    .content h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #fdf6ff;
+      margin-bottom: 4px;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .form-note {
+      font-size: 0.95rem;
+      color: #f1e4ff;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    .shipments-table-wrap {
+      margin-top: 15px;
+      background: rgba(228, 171, 233, 0.3);
+      border-radius: 15px;
+      padding: 10px;
+      box-shadow: 0 6px 30px rgba(39, 52, 93, 0.2);
+      overflow: hidden;
+    }
+
+    table.shipments-table {
+      width: 100%;
+      border-radius: 15px;
+      border-collapse: collapse;
+      font-family: "Roboto", Arial, sans-serif;
+      min-width: 900px;
+    }
+
+    table.shipments-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      padding: 10px 8px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #170019;
+      background: linear-gradient(90deg, #f3c9ff 0%, #f1f2ff 100%);
+      border-bottom: 0;
+    }
+
+    table.shipments-table thead th:first-child { border-top-left-radius: 8px; }
+    table.shipments-table thead th:last-child  { border-top-right-radius: 8px; }
+
+    table.shipments-table tbody tr {
+      transition: background 220ms ease, transform 180ms ease, box-shadow 180ms ease;
+      cursor: default;
+    }
+
+    table.shipments-table tbody tr:nth-child(odd)  { background: #f0e5ff; }
+    table.shipments-table tbody tr:nth-child(even) { background: #e0d3ff; }
+
+    table.shipments-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e0d0ff;
+      color: #1a0021;
+      font-size: 0.8rem;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    table.shipments-table tbody tr:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(123, 146, 201, 0.3);
+      background: #ffffff;
+    }
+
+    .ship-id-badge {
+      display:inline-block;
+      background: rgba(106, 27, 154, 0.08);
+      color: #4a148c;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-weight:600;
+      font-size:0.8rem;
+    }
+
+    @media (max-width: 900px) {
+      .shipments-table-wrap { padding: 8px; }
+      table.shipments-table { min-width: 700px; }
+      .dashboard-container { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo">
+      </div>
+      <nav class="nav-menu">
+        <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/users.html"><i class="fa fa-user"></i> My Account</a>
+        <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+        <a href="/frontend/shipments.html" class="active"><i class="fa fa-box"></i> My Shipments</a>
+        <a href="/frontend/create_device.html"><i class="fa fa-microchip"></i> Create Device Data</a>
+        <a href="/frontend/device.html"><i class="fa fa-table"></i> Device Data</a>
+        <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+      </nav>
+    </header>
+
+    <main class="content">
+      <h2>My Shipments</h2>
+      <p class="form-note">Below are the shipments stored in MongoDB.</p>
+
+      <div class="shipments-table-wrap">
+        <div style="overflow:auto;">
+          <table class="shipments-table" id="shipments-table">
+            <thead>
+              <tr>
+                <th>Shipment #</th>
+                <th>Container #</th>
+                <th>Goods Type</th>
+                <th>Route From</th>
+                <th>Route To</th>
+                <th>Device</th>
+                <th>PO #</th>
+                <th>NDC #</th>
+                <th>Serial Goods</th>
+                <th>Expected Delivery</th>
+                <th>Delivery #</th>
+                <th>Batch ID</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody id="shipments-tbody">
+              <!-- rows from backend -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const tbody = document.getElementById("shipments-tbody");
+
+      function escapeHtml(text) {
+        return String(text ?? "")
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function addRow(s) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span class="ship-id-badge">${escapeHtml(s.shipment_number)}</span></td>
+          <td>${escapeHtml(s.container_number)}</td>
+          <td>${escapeHtml(s.goods_type)}</td>
+          <td>${escapeHtml(s.route_from)}</td>
+          <td>${escapeHtml(s.route_to)}</td>
+          <td>${escapeHtml(s.device)}</td>
+          <td>${escapeHtml(s.po_number)}</td>
+          <td>${escapeHtml(s.ndc_number)}</td>
+          <td>${escapeHtml(s.serial_goods)}</td>
+          <td>${escapeHtml(s.expected_delivery_date)}</td>
+          <td>${escapeHtml(s.delivery_number)}</td>
+          <td>${escapeHtml(s.batch_id)}</td>
+          <td>${escapeHtml(s.description)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      fetch("http://127.0.0.1:8000/api/shipments?limit=100")
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            data.forEach(addRow);
+          } else {
+            console.error("Unexpected response:", data);
+          }
+        })
+        .catch(err => console.error("Error loading shipments:", err));
+    })();
+  </script>
+</body>
+</html>
