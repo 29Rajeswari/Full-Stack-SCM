@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Account — SCMXpertLite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Prevent back/forward navigation -->
+  <script>
+    (function() {
+      for (var i = 0; i < 5; i++) {
+        history.pushState(null, null, location.href);
+      }
+      window.addEventListener('popstate', function(e) {
+        history.pushState(null, null, location.href);
+      });
+      window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+          for (var i = 0; i < 5; i++) {
+            history.pushState(null, null, location.href);
+          }
+        }
+      });
+    })();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 70px 0 0 0;
+      background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
+                  radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
+                  #000814 !important;
+      color: #ffffff;
+    }
+
+    .dashboard-container {
+      background: rgba(9, 13, 32, 0.9) !important;
+      border-radius: 32px !important;
+      border: 1px solid rgba(143, 148, 251, 0.3) !important;
+      box-shadow: 0 22px 45px rgba(104, 74, 255, 0.25) !important;
+      color: #ffffff !important;
+      width: 90%;
+      max-width: 1200px;
+      padding: 12px 20px;
+      box-sizing: border-box;
+      margin-top: 4px !important;  
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 50px !important;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+    }
+
+    .brand img {
+      display: none !important;
+    }
+
+    .brand::before {
+      content: "SCMXpertLite";
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #f6f4f7;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 12px !important;
+      align-items: center;
+      flex-wrap: nowrap !important;
+      margin-left: 24px !important;
+    }
+
+    .topbar .nav-menu a,
+    .topbar .logout-btn {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 8px 18px !important;
+      border-radius: 999px !important;
+      background: #ffffff !important;
+      color: #1c1233 !important;
+      box-shadow: 0 10px 24px rgba(138, 92, 255, 0.25) !important;
+      white-space: nowrap !important;
+      border: none !important;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    }
+
+    .topbar .nav-menu a.active {
+      background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 10px 26px rgba(120, 80, 255, 0.55) !important;
+    }
+
+    .topbar .nav-menu a:hover,
+    .topbar .logout-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 14px 32px rgba(120, 80, 255, 0.7) !important;
+    }
+
+    .topbar .logout-btn {
+      background: #ff5b5b !important;
+      color: #ffffff !important;
+      box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+      padding: 8px 20px !important;
+    }
+
+    .topbar .logout-btn:hover {
+      background: #ff4242 !important;
+      box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+    }
+
+    /* Profile Section */
+    .profile-section {
+      display: flex;
+      justify-content: center;
+      padding: 20px 0;
+    }
+
+    .profile-card {
+      width: 100%;
+      max-width: 600px;
+      background: rgba(18, 24, 56, 0.95);
+      border-radius: 32px;
+      padding: 48px 40px;
+      box-shadow: 0 18px 40px rgba(40, 20, 90, 0.6);
+      border: 1px solid rgba(127, 93, 255, 0.35);
+    }
+
+    .profile-title {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 600;
+      margin: 0 0 30px 0;
+      color: #f9f5ff;
+      letter-spacing: 2px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 0;
+      border-bottom: 1px solid rgba(127, 93, 255, 0.2);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-size: 18px;
+      color: #a9b2ff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-value {
+      font-size: 18px;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .role-badge {
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .role-admin {
+      background: rgba(255, 152, 0, 0.2);
+      color: #ffb347;
+    }
+
+    .role-user {
+      background: rgba(100, 181, 246, 0.2);
+      color: #64b5f6;
+    }
+
+    .error-msg {
+      text-align: center;
+      color: #ff6b6b;
+      padding: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        width: 96%;
+        padding: 12px 16px;
+      }
+      .profile-card {
+        padding: 18px 20px;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .nav-menu {
+        flex-wrap: wrap !important;
+        margin-left: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top Navigation -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo">
+      </div>
+      <nav class="nav-menu">
+        <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/account.html" class="active"><i class="fa fa-user-circle"></i> My Account</a>
+        <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+        <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+        <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+      </nav>
+    </header>
+
+    <!-- Profile Content -->
+    <main class="profile-section">
+      <div class="profile-card">
+        <h1 class="profile-title">MY ACCOUNT</h1>
+        <div id="profile-info">
+          <div class="info-row">
+            <span class="info-label">Username</span>
+            <span id="display-username" class="info-value">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span id="display-email" class="info-value">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Role</span>
+            <span id="display-role" class="info-value">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Created At</span>
+            <span id="display-created" class="info-value">-</span>
+          </div>
+        </div>
+        <div id="error-message" class="error-msg" style="display:none;"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    window.addEventListener("load", async function() {
+      const token = localStorage.getItem("access_token");
+      
+      if (!token) {
+        window.location.href = "/frontend/users.html";
+        return;
+      }
+
+      try {
+        const response = await fetch("/account", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          document.getElementById("display-username").textContent = data.username || "-";
+          document.getElementById("display-email").textContent = data.email || "-";
+          
+          const roleSpan = document.getElementById("display-role");
+          const role = data.role || "user";
+          roleSpan.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+          roleSpan.className = `info-value role-badge ${role === 'admin' ? 'role-admin' : 'role-user'}`;
+          
+          if (data.created_at) {
+            const date = new Date(data.created_at);
+            document.getElementById("display-created").textContent = date.toLocaleDateString();
+          } else {
+            document.getElementById("display-created").textContent = "-";
+          }
+        } else if (response.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user_role");
+          localStorage.removeItem("username");
+          window.location.href = "/frontend/users.html";
+        } else {
+          document.getElementById("error-message").textContent = "Failed to load profile";
+          document.getElementById("error-message").style.display = "block";
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        document.getElementById("error-message").textContent = "Connection error";
+        document.getElementById("error-message").style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+# ---------- FastAPI ----------
+fastapi==0.68.1
+uvicorn[standard]
+
+# ---------- Templates ----------
+jinja2
+aiofiles
+
+# ---------- Data Models ----------
+pydantic==1.10.13
+
+# ---------- Environment Variables ----------
+python-dotenv
+
+# ---------- Kafka (Producer & Consumer) ----------
+kafka-python
+
+# ---------- MongoDB (Backend / Consumer) ----------
+pymongo
+
+# ---------- Auth / JWT ----------
+python-jose[cryptography]
+
+# ---------- Optional Utilities ----------
+requests
+orjson
+# ---------- Form handling ----------
+python-multipart
+# ---------- Data Models ----------
+pydantic==1.10.13
+email-validator
+# ---------- Password Hashing ----------
+passlib[bcrypt]

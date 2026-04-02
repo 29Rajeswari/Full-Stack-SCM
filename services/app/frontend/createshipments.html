@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Shipment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Prevent back/forward navigation -->
+  <script>
+    // Aggressive prevention - runs before anything else
+    (function() {
+      // Push multiple states to prevent back navigation
+      for (var i = 0; i < 5; i++) {
+        history.pushState(null, null, location.href);
+      }
+      
+      // Handle popstate (back/forward clicks)
+      window.addEventListener('popstate', function(e) {
+        // Push state again immediately
+        history.pushState(null, null, location.href);
+      });
+      
+      // Handle pageshow (browser cache restoration)
+      window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+          for (var i = 0; i < 5; i++) {
+            history.pushState(null, null, location.href);
+          }
+        }
+      });
+    })();
+  </script>
+
+  <style>
+    body {
+      min-height: 100vh;
+      background-color: #1a1a2e;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('pics/device.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #fff;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: auto;
+      background-color: #e7e6e6;
+      background-image: url('/static/OIP(10).jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 0 0 0;
+    }
+
+    .dashboard-container {
+      background: #f7eaff;
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: 0 8px 30px 0 rgba(151, 47, 182, 0.5);
+      width: 90%;
+      max-width: 1200px;
+      padding: 16px 20px;
+      color: #2c1040;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .brand img {
+      height: 30px;
+      border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(185, 231, 232, 0.2);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-menu a,
+    .logout-btn {
+      color: #030006;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 12px #9974d8;
+    }
+
+    .nav-menu a:hover,
+    .logout-btn:hover {
+      background: linear-gradient(90deg, #a327ae, #36b1f4);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .nav-menu a.active {
+      background: linear-gradient(90deg, #b47bff, #5e43f3);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(88, 55, 170, 0.35);
+    }
+
+    .content h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f0535;
+      margin-bottom: 5px;
+      text-shadow: 0 2px 3px rgba(238, 231, 231, 0.5);
+    }
+
+    .form-note {
+      font-size: 0.7rem;
+      color: #4a285f;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    form.shipment-form {
+      background: #eee6ff;
+      border-radius: 20px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 40px rgba(82, 16, 144, 0.4);
+    }
+
+    .form-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .form-column {
+      flex: 1;
+      min-width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 700;
+      color: #280a3f;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #c7aef0;
+      font-size: 0.7rem;
+      background: #f7f2ff;
+      color: #311b4f;
+      font-weight: 700;
+      box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.7);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #7e3ff2;
+      box-shadow: 0 0 0 2px rgba(126, 63, 242, 0.2);
+      background: #ffffff;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      margin-top: 15px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 680px;
+      margin-bottom: 0;
+    }
+
+    button.btn-primary,
+    button.btn-danger {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(120, 87, 178, 0.7);
+      transition: background 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0px;
+    }
+
+    button.btn-primary {
+      background: linear-gradient(90deg, #9a64c7, #291696);
+      color: #f7ecff;
+    }
+
+    button.btn-primary:hover {
+      background: linear-gradient(90deg, #1e8449, #2980b9);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+    }
+
+    button.btn-danger {
+      background: linear-gradient(90deg, #f06292, #ffb74d);
+      color: #4a148c;
+    }
+
+    button.btn-danger:hover {
+      background: linear-gradient(90deg, #ffab91, #ffe082);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 183, 77, 0.4);
+    }
+
+    .result-message {
+      margin-top: 15px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+    }
+
+    .result-success {
+      background: #e8f5e9;
+      color: #1b5e20;
+      border: 1px solid #a5d6a7;
+    }
+
+    .result-error {
+      background: #ffebee;
+      color: #b71c1c;
+      border: 1px solid #ef9a9a;
+    }
+
+    @media (max-width: 900px) {
+      .form-grid {
+        flex-direction: column;
+      }
+      .dashboard-container {
+        padding: 20px;
+      }
+    }
+
+    /* 🔥 EXTRA NEON OVERRIDES – SAME LOOK AS LIVE STREAM PAGE 🔥 */
+
+    /* Neon gradient background */
+    body {
+      background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
+                  radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
+                  #000814 !important;
+      color: #ffffff;
+      /* reduced from 40px -> 10px to bring navbar closer to top */
+      padding: 10px 0 !important;
+    }
+
+    /* Dark glass card container */
+    .dashboard-container {
+      background: rgba(9, 13, 32, 0.9) !important;
+      border-radius: 32px !important;
+      border: 1px solid rgba(143, 148, 251, 0.3) !important;
+      box-shadow: 0 22px 45px rgba(104, 74, 255, 0.25) !important;
+      color: #ffffff !important;
+      margin-top: 4px !important;
+      padding: 16px 20px !important;
+      box-sizing: border-box !important;
+    }
+
+    .content h2 {
+      color: #f9f5ff !important;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    .form-note {
+      color: #d0c8ff !important;
+    }
+
+    /* Form card darker glass */
+    form.shipment-form {
+      background: rgba(18, 24, 56, 0.95) !important;
+      border-radius: 24px !important;
+      box-shadow: 0 18px 45px rgba(40, 20, 90, 0.6) !important;
+      border: 1px solid rgba(127, 93, 255, 0.35);
+      padding: 16px 20px !important;
+    }
+
+    label {
+      color: #c9b7ff !important;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      background: rgba(10, 14, 38, 0.9) !important;
+      border: 1px solid rgba(145, 115, 255, 0.7) !important;
+      color: #f5f1ff !important;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      background: #050818 !important;
+      border-color: #b987ff !important;
+      box-shadow: 0 0 0 2px rgba(185, 135, 255, 0.4) !important;
+    }
+
+    /* Buttons keep your gradient but pop a bit more */
+    button.btn-primary {
+      box-shadow: 0 12px 30px rgba(132, 94, 255, 0.8) !important;
+    }
+
+    button.btn-danger {
+      box-shadow: 0 12px 30px rgba(255, 153, 102, 0.7) !important;
+    }
+
+    /* 🌈 NAVBAR – PILL BUTTONS, SINGLE LINE, LOGOUT FULLY VISIBLE 🌈 */
+
+    .topbar {
+      margin-bottom: 60px !important;
+    }
+
+    /* 🔵 TEXT LOGO LIKE YOUR LIVE STREAM NAVBAR 🔵 */
+    .brand {
+      display: flex;
+      align-items: center;
+    }
+
+    /* hide the img but keep HTML intact */
+    .brand img {
+      display: none !important;
+    }
+
+    /* add SCMXpertLite text logo */
+    .brand::before {
+      content: "SCMXpertLite";
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #f6f4f7;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .nav-menu {
+      gap: 14px !important;
+      flex-wrap: nowrap !important;
+      margin-left: 24px !important; /* space between logo and first pill */
+    }
+
+    .topbar .nav-menu a,
+    .topbar .logout-btn {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 8px 18px !important;
+      border-radius: 999px !important;
+      background: #ffffff !important;
+      color: #1c1233 !important;
+      box-shadow: 0 10px 24px rgba(138, 92, 255, 0.25) !important;
+      white-space: nowrap !important; /* keep text in one line */
+      border: none !important;
+    }
+
+    .topbar .nav-menu a.active {
+      background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 12px 30px rgba(120, 80, 255, 0.55) !important;
+    }
+
+    .topbar .nav-menu a:hover,
+    .topbar .logout-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 14px 32px rgba(120, 80, 255, 0.7) !important;
+    }
+
+    .topbar .logout-btn {
+      background: #ff5b5b !important;
+      color: #ffffff !important;
+      box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+      padding: 8px 20px !important;
+    }
+
+    .topbar .logout-btn:hover {
+      background: #ff4242 !important;
+      box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo">
+      </div>
+      <nav class="nav-menu">
+        <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
+        <a href="/frontend/createshipments.html" class="active"><i class="fa fa-plus"></i> Create Shipment</a>
+        <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+        <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+      </nav>
+    </header>
+
+    <main class="content">
+      <h2>Create New Shipment</h2>
+      <p class="form-note">Please fill all the details.</p>
+
+      <form id="shipment-form" class="shipment-form">
+        <div class="form-grid">
+          <!-- Column 1 -->
+          <div class="form-column">
+            <label><i class="fa fa-barcode"></i> Shipment Number*</label>
+            <input type="text" name="shipment_number" required />
+
+            <label><i class="fa fa-route"></i> To Route Details*</label>
+            <input type="text" name="route_to" placeholder="e.g., Chennai" required />
+
+            <label><i class="fa fa-route"></i> From Route Details*</label>
+            <input type="text" name="route_from" placeholder="e.g., Tirupati" required />
+
+            <label><i class="fa fa-microchip"></i> Device*</label>
+            <select name="device" required>
+              <option value="">Select Device</option>
+              <option>Device A</option>
+              <option>Device B</option>
+              <option>Device C</option>
+            </select>
+
+            <label><i class="fa fa-file-invoice"></i> PO Number*</label>
+            <input type="text" name="po_number" required />
+
+            <label><i class="fa fa-hashtag"></i> NDC Number*</label>
+            <input type="text" name="ndc_number" required />
+
+            <label><i class="fa fa-box-open"></i> Serial Number of Goods*</label>
+            <input type="text" name="serial_goods" required />
+          </div>
+
+          <!-- Column 2 -->
+          <div class="form-column">
+            <label><i class="fa fa-box"></i> Container Number*</label>
+            <input type="text" name="container_number" required />
+
+            <label><i class="fa fa-tags"></i> Goods Type*</label>
+            <select name="goods_type" required>
+              <option value="">Select Goods</option>
+              <option>Electronics</option>
+              <option>Pharma</option>
+              <option>Food</option>
+            </select>
+
+            <label><i class="fa fa-calendar-alt"></i> Expected Delivery Date*</label>
+            <input type="date" name="expected_delivery_date" required />
+
+            <label><i class="fa fa-truck"></i> Delivery Number*</label>
+            <input type="text" name="delivery_number" required />
+
+            <label><i class="fa fa-barcode"></i> Batch ID*</label>
+            <input type="text" name="batch_id" required />
+
+            <label><i class="fa fa-align-left"></i> Shipment Description*</label>
+            <textarea name="description" required></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">
+            <i class="fa fa-check"></i> CREATE SHIPMENT
+          </button>
+          <button type="reset" class="btn-danger">
+            <i class="fa fa-eraser"></i> CLEAR DETAILS
+          </button>
+        </div>
+      </form>
+
+      <div id="result" class="result-message" style="display:none;"></div>
+    </main>
+  </div>
+
+  <script>
+  (function () {
+    const form = document.getElementById("shipment-form");
+    const resultBox = document.getElementById("result");
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    function showError(msg) {
+      resultBox.style.display = "block";
+      resultBox.className = "result-message result-error";
+      resultBox.textContent = msg;
+      // scroll to result so user sees it (if needed)
+      resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function showSuccess(msg) {
+      resultBox.style.display = "block";
+      resultBox.className = "result-message result-success";
+      resultBox.textContent = msg;
+      resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function clearResult() {
+      resultBox.style.display = "none";
+      resultBox.textContent = "";
+    }
+
+    // Validation rules (regex)
+    const patterns = {
+      po: /^\d{6}$/,                       // exactly 6 digits
+      ndc: /^\d{11}$/,                     // exactly 11 digits
+      shipmentNumber: /^[A-Za-z0-9\-]{3,20}$/, // alphanumeric & dash, length 3-20
+      container: /^[A-Za-z0-9\-]{4,20}$/,  // alphanumeric & dash, length 4-20
+      deliveryNumber: /^\d{1,20}$/,       // numeric id up to 20 digits
+      noCommaDot: /^[^,\.]+$/             // no comma or dot
+    };
+
+    function isDateInFutureOrToday(dateStr) {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      if (isNaN(d)) return false;
+      // Compare only date portion (ignore time zones)
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      d.setHours(0,0,0,0);
+      return d >= today;
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      clearResult();
+
+      // grab and trim fields
+      const fd = new FormData(form);
+      const data = {};
+      for (const [k, v] of fd.entries()) data[k] = (typeof v === "string") ? v.trim() : v;
+
+      // required fields list
+      const required = [
+        "shipment_number",
+        "route_to",
+        "route_from",
+        "device",
+        "po_number",
+        "ndc_number",
+        "serial_goods",
+        "container_number",
+        "goods_type",
+        "expected_delivery_date",
+        "delivery_number",
+        "batch_id",
+        "description"
+      ];
+
+      for (const key of required) {
+        if (!data[key] || data[key].length === 0) {
+          showError(`Please fill the required field: ${key.replace(/_/g, ' ')}.`);
+          return;
+        }
+      }
+
+      // specific validations
+      if (!patterns.shipmentNumber.test(data.shipment_number)) {
+        showError("Shipment Number must be 3-20 characters: letters, numbers or '-' only.");
+        return;
+      }
+
+      if (!patterns.po.test(data.po_number)) {
+        showError("PO Number must be exactly 6 digits.");
+        return;
+      }
+
+      if (!patterns.ndc.test(data.ndc_number)) {
+        showError("NDC Number must be exactly 11 digits.");
+        return;
+      }
+
+      if (!patterns.container.test(data.container_number)) {
+        showError("Container Number must be 4-20 characters and contain only letters, numbers or '-'.");
+        return;
+      }
+
+      if (!patterns.noCommaDot.test(data.batch_id)) {
+        showError("Batch ID must not contain commas or dots.");
+        return;
+      }
+
+      if (!patterns.noCommaDot.test(data.serial_goods)) {
+        showError("Serial Number of Goods must not contain commas or dots.");
+        return;
+      }
+
+      if (!patterns.deliveryNumber.test(data.delivery_number)) {
+        showError("Delivery Number must be numeric (up to 20 digits).");
+        return;
+      }
+
+      if (!isDateInFutureOrToday(data.expected_delivery_date)) {
+        showError("Expected Delivery Date must be today or a future date.");
+        return;
+      }
+
+      if (data.description.length < 10) {
+        showError("Description must be at least 10 characters long.");
+        return;
+      }
+      if (data.description.length > 500) {
+        showError("Description cannot exceed 500 characters.");
+        return;
+      }
+
+      // device/goods type selection checks
+      if (!data.device || data.device === "") {
+        showError("Please select a Device.");
+        return;
+      }
+      if (!data.goods_type || data.goods_type === "") {
+        showError("Please select Goods Type.");
+        return;
+      }
+
+      // pass all validations -> submit
+      try {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = "0.6";
+
+        const payload = new URLSearchParams();
+        for (const k in data) payload.append(k, data[k]);
+
+        // Get auth token
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          showError("Please login to create shipments.");
+          window.location.href = "/frontend/users.html";
+          return;
+        }
+
+        const response = await fetch("/api/shipments/create", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": `Bearer ${token}`
+          },
+          body: payload.toString(),
+        });
+
+        const text = await response.text();
+        let json;
+        try { json = JSON.parse(text); } catch { json = null; }
+
+        if (response.status === 401) {
+          showError("Session expired. Please login again.");
+          localStorage.removeItem("access_token");
+          setTimeout(() => { window.location.href = "/frontend/users.html"; }, 1500);
+          return;
+        }
+
+        if (!response.ok) {
+          showError(json?.detail || text || "Error creating shipment");
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = "";
+          return;
+        }
+
+        showSuccess(json?.message || "Shipment created successfully!");
+        form.reset();
+      } catch (err) {
+        showError("Network error: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "";
+      }
+    });
+  })();
+
+  // Check authentication on page load
+  window.addEventListener("load", function() {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Please login to access this page.");
+      window.location.href = "/frontend/users.html";
+    }
+  });
+</script>
+

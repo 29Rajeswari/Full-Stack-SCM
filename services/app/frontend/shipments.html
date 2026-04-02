@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Shipments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Prevent back/forward navigation -->
+  <script>
+    (function() {
+      for (var i = 0; i < 5; i++) {
+        history.pushState(null, null, location.href);
+      }
+      window.addEventListener('popstate', function(e) {
+        history.pushState(null, null, location.href);
+      });
+      window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+          for (var i = 0; i < 5; i++) {
+            history.pushState(null, null, location.href);
+          }
+        }
+      });
+    })();
+  </script>
+
+  <style>
+    /* --- ORIGINAL BASE STYLES (UNCHANGED) --- */
+    body {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: 60vh;
+      background-color: #e7e6e6;
+      background-image: url('/static/OIP(10).jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px 0;
+    }
+
+    .dashboard-container {
+      background: #f7eaff;
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px 0 rgba(151, 47, 182, 0.5);
+      width: 90%;
+      max-width: 1200px;
+      padding: 20px 24px;
+      color: #2c1040;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .brand img {
+      height: 50px;
+      border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(185, 231, 232, 0.2);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-menu a,
+    .logout-btn {
+      color: #030006;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 12px #9974d8;
+    }
+
+    .nav-menu a:hover,
+    .logout-btn:hover {
+      background: linear-gradient(90deg, #a327ae, #36b1f4);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .nav-menu a.active {
+      background: linear-gradient(90deg, #b47bff, #5e43f3);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(88, 55, 170, 0.35);
+    }
+
+    .content h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f0535;
+      margin-bottom: px;
+      text-shadow: 0 2px 3px rgba(238, 231, 231, 0.5);
+    }
+
+    .form-note {
+      font-size: 0.95rem;
+      color: #442864;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    .shipments-table-wrap {
+      margin-top: 15px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 15px;
+      padding: 10px;
+      box-shadow: 0 6px 30px rgba(123, 146, 201, 0.2);
+      overflow: hidden;
+    }
+
+    table.shipments-table {
+      width: 100%;
+      border-radius: 15px;
+      border-collapse: collapse;
+      font-family: "Roboto", Arial, sans-serif;
+      min-width: 900px;
+    }
+
+    table.shipments-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      padding: 10px 8px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #3b215f;
+      background: linear-gradient(90deg, #e5c8ff 0%, #f4f4ff 100%);
+      border-bottom: 0;
+    }
+
+    table.shipments-table thead th:first-child { border-top-left-radius: 8px; }
+    table.shipments-table thead th:last-child  { border-top-right-radius: 8px; }
+
+    table.shipments-table tbody tr:nth-child(odd)  { background: #f1e9ff; }
+    table.shipments-table tbody tr:nth-child(even) { background: #e2dbff; }
+
+    table.shipments-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e0d0ff;
+      color: #1b1035;
+      font-size: 0.8rem;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    table.shipments-table tbody tr:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(123, 146, 201, 0.25);
+      background: linear-gradient(180deg, #ffffff, #f9f4ff);
+    }
+
+    .ship-id-badge {
+      display:inline-block;
+      background: rgba(90, 43, 207, 0.1);
+      color: #3b1a74;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-weight:600;
+      font-size:0.8rem;
+    }
+
+    .created-by-admin {
+      display: inline-block;
+      background: rgba(255, 152, 0, 0.2);
+      color: #ff9800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .created-by-user {
+      display: inline-block;
+      background: rgba(100, 181, 246, 0.2);
+      color: #64b5f6;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    @media (max-width: 900px) {
+      .shipments-table-wrap { padding: 8px; }
+      table.shipments-table { min-width: 700px; }
+      .dashboard-container { padding: 20px; }
+    }
+
+    /* ============================================================
+       🔥 NEON + NAVBAR OVERRIDES TO MATCH CREATE SHIPMENT PAGE 🔥
+       ============================================================ */
+
+    /* Neon gradient background */
+    body {
+      background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
+                  radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
+                  #000814 !important;
+    color: #ffffff;
+      padding: 10px 0 !important;   /* bring card closer to top */
+    }
+
+    /* Dark glass main container */
+    .dashboard-container {
+      background: rgba(9, 13, 32, 0.9) !important;
+      border-radius: 32px !important;
+      border: 1px solid rgba(143, 148, 251, 0.3) !important;
+      box-shadow: 0 22px 45px rgba(104, 74, 255, 0.25) !important;
+      color: #ffffff !important;
+      margin-top: 4px !important;
+      padding: 20px 24px !important;
+      box-sizing: border-box !important;
+    }
+
+    .content h2 {
+      color: #f9f5ff !important;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .form-note {
+      color: #d0c8ff !important;
+    }
+
+    /* 🔵 TEXT LOGO LIKE OTHER PAGES (SCMXpertLite) 🔵 */
+    .brand {
+      display: flex;
+      align-items: center;
+    }
+
+    /* Keep HTML <img>, just hide it visually */
+    .brand img {
+      display: none !important;
+    }
+
+    .brand::before {
+      content: "SCMXpertLite";
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #f6f4f7;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Navbar – pill buttons, single line, logout visible */
+    .topbar {
+      margin-bottom: 16px !important;
+    }
+
+    .nav-menu {
+      gap: 14px !important;
+      flex-wrap: nowrap !important;
+      margin-left: 24px !important; /* space between logo & first pill */
+    }
+
+    .topbar .nav-menu a,
+    .topbar .logout-btn {
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 8px 18px !important;
+      border-radius: 999px !important;
+      background: #ffffff !important;
+      color: #1c1233 !important;
+      box-shadow: 0 10px 24px rgba(138, 92, 255, 0.25) !important;
+      white-space: nowrap !important;
+      border: none !important;
+    }
+
+    .topbar .nav-menu a.active {
+      background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 12px 30px rgba(120, 80, 255, 0.55) !important;
+    }
+
+    .topbar .nav-menu a:hover,
+    .topbar .logout-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+      color: #ffffff !important;
+      box-shadow: 0 14px 32px rgba(120, 80, 255, 0.7) !important;
+    }
+
+    .topbar .logout-btn {
+      background: #ff5b5b !important;
+      color: #ffffff !important;
+      box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+      padding: 8px 20px !important;
+    }
+
+    .topbar .logout-btn:hover {
+      background: #ff4242 !important;
+      box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+    }
+
+    /* 🌙 Dark-glass style table to match theme */
+    .shipments-table-wrap {
+      background: rgba(15, 20, 50, 0.9) !important;
+      border-radius: 20px !important;
+      border: 1px solid rgba(127, 93, 255, 0.35);
+      box-shadow: 0 18px 40px rgba(20, 15, 60, 0.7);
+    }
+
+    table.shipments-table thead th {
+      color: #f7f3ff !important;
+      background: linear-gradient(135deg, #a471ff 0%, #7f5dff 100%) !important;
+    }
+
+    table.shipments-table tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    table.shipments-table tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    table.shipments-table td {
+      border-bottom: 1px solid rgba(127, 93, 255, 0.3) !important;
+      color: #f7f3ff !important;
+    }
+
+    table.shipments-table tbody tr:hover {
+      background: rgba(138, 92, 255, 0.25) !important;
+      box-shadow: 0 8px 20px rgba(123, 146, 201, 0.3) !important;
+    }
+
+    .ship-id-badge {
+      background: rgba(164, 113, 255, 0.25) !important;
+      color: #ffffff !important;
+    }
+
+    /* ============================================
+       ⭐ NEW: LIVE-STREAM-LIKE SEARCH + BUTTON  ⭐
+       (created via JS, HTML untouched)
+       ============================================ */
+
+    .shipments-controls {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .shipment-input {
+      width: 260px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #1e1e2b;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 15px;
+    }
+
+    .get-shipment-btn {
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, #6b4dff, #b06bff);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 5px 10px rgba(120, 80, 255, 0.4);
+      transition: 0.2s ease-in-out;
+    }
+
+    .get-shipment-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 18px rgba(150, 90, 255, 0.5);
+    }
+
+    .highlight-row {
+      outline: 2px solid #ff6bff;
+      box-shadow: 0 0 15px rgba(255, 107, 255, 0.7) inset;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo">
+      </div>
+      <nav class="nav-menu">
+        <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
+        <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+        <a href="/frontend/shipments.html" class="active"><i class="fa fa-box"></i> My Shipments</a>
+        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+        <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+      </nav>
+    </header>
+
+    <main class="content">
+      <h2>My Shipments</h2>
+      <p class="form-note"></p>
+      <div class="shipments-table-wrap">
+        <div style="overflow:auto;">
+          <table class="shipments-table" id="shipments-table">
+            <thead>
+              <tr>
+                <th>Shipment #</th>
+                <th>Container #</th>
+                <th>Goods Type</th>
+                <th>Route From</th>
+                <th>Route To</th>
+                <th>Device</th>
+                <th>PO #</th>
+                <th>NDC #</th>
+                <th>Serial Goods</th>
+                <th>Expected Delivery</th>
+                <th>Delivery #</th>
+                <th>Batch ID</th>
+                <th>Description</th>
+                <th>Created By</th>
+              </tr>
+            </thead>
+            <tbody id="shipments-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function () {
+    const tbody = document.getElementById("shipments-tbody");
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 👉 Build unique shipment id from user input + created_at timestamp
+    function buildUniqueShipmentId(s) {
+      const base = s.shipment_number || "";
+      const created = s.created_at;
+      if (!created) return base;
+
+      // Convert UTC → IST (+5:30)
+      const d = new Date(new Date(created).getTime() + (5.5 * 60 * 60 * 1000));
+
+      const yyyy = d.getFullYear();
+      const mm   = String(d.getMonth() + 1).padStart(2, "0");
+      const dd   = String(d.getDate()).padStart(2, "0");
+      const hh   = String(d.getHours()).padStart(2, "0");
+      const mi   = String(d.getMinutes()).padStart(2, "0");
+      const ss   = String(d.getSeconds()).padStart(2, "0");
+
+      const stamp = `${yyyy}${mm}${dd}${hh}${mi}${ss}`;
+      return `${base}-${stamp}`;
+    }
+
+    // 👉 Format created by info
+    function formatCreatedBy(s) {
+      const username = s.created_by || "unknown";
+      const role = s.created_by_role || "user";
+      const cssClass = role === "admin" ? "created-by-admin" : "created-by-user";
+      return `<span class="${cssClass}">${escapeHtml(username)}</span>`;
+    }
+
+    function addRow(s) {
+      const tr = document.createElement("tr");
+      const uniqueId = buildUniqueShipmentId(s);
+      const createdBy = formatCreatedBy(s);
+
+      tr.innerHTML = `
+        <td><span class="ship-id-badge">${escapeHtml(uniqueId)}</span></td>
+        <td>${escapeHtml(s.container_number)}</td>
+        <td>${escapeHtml(s.goods_type)}</td>
+        <td>${escapeHtml(s.route_from)}</td>
+        <td>${escapeHtml(s.route_to)}</td>
+        <td>${escapeHtml(s.device)}</td>
+        <td>${escapeHtml(s.po_number)}</td>
+        <td>${escapeHtml(s.ndc_number)}</td>
+        <td>${escapeHtml(s.serial_goods)}</td>
+        <td>${escapeHtml(s.expected_delivery_date)}</td>
+        <td>${escapeHtml(s.delivery_number)}</td>
+        <td>${escapeHtml(s.batch_id)}</td>
+        <td>${escapeHtml(s.description)}</td>
+        <td>${createdBy}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Check authentication and load shipments
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Please login to view shipments.");
+      window.location.href = "/frontend/users.html";
+    } else {
+      // Load shipments with authentication
+      fetch("/api/shipments?limit=100", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+        .then(res => {
+          if (res.status === 401) {
+            localStorage.removeItem("access_token");
+            alert("Session expired. Please login again.");
+            window.location.href = "/frontend/users.html";
+            return [];
+          }
+          return res.json();
+        })
+        .then(data => {
+          if (Array.isArray(data)) data.forEach(addRow);
+          else if (data) console.error("Unexpected response:", data);
+        })
+        .catch(err => console.error("Error loading shipments:", err));
+    }
+
+    // ⭐ Existing controls code kept as-is
+    const note = document.querySelector('.form-note');
+    if (note) {
+      const controls = document.createElement('div');
+      controls.className = 'shipments-controls';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Enter Shipment #';
+      input.className = 'shipment-input';
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'get-shipment-btn';
+      btn.textContent = 'GET SHIPMENT DATA';
+
+      controls.appendChild(input);
+      controls.appendChild(btn);
+      note.insertAdjacentElement('afterend', controls);
+
+      btn.addEventListener('click', () => {
+        const value = input.value.trim();
+        const rows = tbody.querySelectorAll('tr');
+
+        rows.forEach(r => r.classList.remove('highlight-row'));
+        if (!value) return;
+
+        rows.forEach(row => {
+          const firstCell = row.querySelector('td');
+          if (firstCell && firstCell.textContent.trim() === value) {
+            row.classList.add('highlight-row');
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      });
+    }
+  })();
+</script>

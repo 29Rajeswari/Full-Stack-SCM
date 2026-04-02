@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCMXpertLite - Live Streaming Device Data</title>
+
+    <!-- Prevent back/forward navigation -->
+    <script>
+      (function() {
+        for (var i = 0; i < 5; i++) {
+          history.pushState(null, null, location.href);
+        }
+        window.addEventListener('popstate', function(e) {
+          history.pushState(null, null, location.href);
+        });
+        window.addEventListener('pageshow', function(e) {
+          if (e.persisted) {
+            for (var i = 0; i < 5; i++) {
+              history.pushState(null, null, location.href);
+            }
+          }
+        });
+      })();
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ========= GLOBAL STYLES ========= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 10px 0;
+            background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
+                        radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
+                        #000814 !important;
+            color: #ffffff;
+        }
+
+        /* ========= MAIN CONTAINER ========= */
+        .dashboard-container {
+            background: rgba(9, 13, 32, 0.9) !important;
+            border-radius: 32px !important;
+            border: 1px solid rgba(143, 148, 251, 0.3) !important;
+            box-shadow: 0 22px 45px rgba(104, 74, 255, 0.25) !important;
+            color: #ffffff !important;
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px 24px;
+            box-sizing: border-box;
+            margin-top: 4px !important;
+        }
+
+        /* ========= TOPBAR / NAV ========= */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px !important;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand img {
+            display: none !important;
+        }
+
+        .brand::before {
+            content: "SCMXpertLite";
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: #f6f4f7;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 12px !important;
+            align-items: center;
+            flex-wrap: nowrap !important;
+            margin-left: 24px !important;
+        }
+
+        .topbar .nav-menu a,
+        .topbar .logout-btn {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            padding: 8px 18px !important;
+            border-radius: 999px !important;
+            background: #ffffff !important;
+            color: #1c1233 !important;
+            box-shadow: 0 10px 24px rgba(138, 92, 255, 0.25) !important;
+            white-space: nowrap !important;
+            border: none !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease, color 0.3s ease,
+                        transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .topbar .nav-menu a.active {
+            background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+            color: #ffffff !important;
+            box-shadow: 0 12px 30px rgba(120, 80, 255, 0.55) !important;
+        }
+
+        .topbar .nav-menu a:hover,
+        .topbar .logout-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+            color: #ffffff !important;
+            box-shadow: 0 14px 32px rgba(120, 80, 255, 0.7) !important;
+        }
+
+        .topbar .logout-btn {
+            background: #ff5b5b !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+            padding: 8px 20px !important;
+        }
+
+        .topbar .logout-btn:hover {
+            background: #ff4242 !important;
+            box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+        }
+
+        /* ========= CONTENT ========= */
+        .content {
+            padding: 10px 10px 20px 10px;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #f9f5ff !important;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 400;
+            margin-bottom: 30px;
+            color: #d0c8ff !important;
+        }
+
+        .subtitle span {
+            background: rgba(127, 93, 255, 0.3);
+            border-radius: 999px;
+            padding: 4px 10px;
+            margin-left: 10px;
+            font-size: 11px;
+            color: #a68bff;
+            border: 1px solid rgba(127, 93, 255, 0.4);
+        }
+
+        /* ========= DEVICE CONTROLS ========= */
+        .device-select-box {
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .device-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .device-input {
+            width: 260px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: rgba(10, 14, 38, 0.9);
+            color: #ffffff;
+            border: 1px solid rgba(145, 115, 255, 0.7);
+            font-size: 15px;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        }
+
+        .device-input::placeholder {
+            color: #7b7b9a;
+        }
+
+        .device-input:focus {
+            outline: none;
+            border-color: #b987ff;
+            box-shadow: 0 0 0 2px rgba(185, 135, 255, 0.4);
+        }
+
+        .get-device-btn {
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            color: white;
+            background: linear-gradient(135deg, #6b4dff, #b06bff);
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(120, 80, 255, 0.4);
+            transition: 0.2s ease-in-out;
+        }
+
+        .get-device-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 18px rgba(150, 90, 255, 0.5);
+        }
+
+        /* ========= TABLE ========= */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.07) !important;
+            border: 1px solid rgba(127, 93, 255, 0.4) !important;
+            backdrop-filter: blur(12px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #ffffff !important;
+            font-size: 14px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #a471ff, #7f5dff);
+        }
+
+        th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 700;
+            color: #f8f3ff;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(127, 93, 255, 0.08);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(138, 92, 255, 0.25) !important;
+        }
+
+        td {
+            padding: 14px 20px;
+            color: #ffffff !important;
+        }
+
+        .highlight-row {
+            outline: 2px solid #ff6bff;
+            box-shadow: 0 0 15px rgba(255, 107, 255, 0.7) inset;
+        }
+
+        #status-text {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #7b7b9a;
+            text-align: right;
+        }
+
+        #status-text.error {
+            color: #ff4d4f;
+        }
+
+        /* ========= RESPONSIVE ========= */
+        @media (max-width: 900px) {
+            .dashboard-container {
+                width: 96%;
+                padding: 16px 14px 26px 14px;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .nav-menu {
+                flex-wrap: wrap !important;
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Top Navigation Bar -->
+        <header class="topbar">
+            <div class="brand">
+                <img src="/static/logo.jpg" alt="Logo">
+            </div>
+            <nav class="nav-menu">
+                <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+                <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
+                <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+                <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+                <a href="/frontend/live_streaming.html" class="active"><i class="fa fa-microchip"></i> Live Streaming</a>
+                <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="content">
+            <h1 class="page-title">Live Streaming Device Data</h1>
+            <p class="subtitle">
+                Showing the latest telemetry for all devices.
+                <span>Auto refresh: 5s</span>
+            </p>
+
+            <div class="device-select-box">
+                <div class="device-controls">
+                    <input type="text" class="device-input" placeholder="Enter Device ID">
+                    <button class="get-device-btn">GET DEVICE DATA</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device Id</th>
+                            <th>Battery Level</th>
+                            <th>Temp</th>
+                            <th>Route From</th>
+                            <th>Route To</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-data-body"></tbody>
+                </table>
+            </div>
+
+            <div id="status-text">Loading data...</div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = "/api/live-stream";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tbody = document.getElementById('device-data-body');
+            const statusText = document.getElementById('status-text');
+            const input = document.querySelector('.device-input');
+            const getBtn = document.querySelector('.get-device-btn');
+
+            if (getBtn && input) {
+                getBtn.addEventListener('click', () => {
+                    const idToFind = input.value.trim();
+                    const rows = tbody.querySelectorAll('tr');
+
+                    rows.forEach(row => row.classList.remove('highlight-row'));
+
+                    if (!idToFind) return;
+
+                    rows.forEach(row => {
+                        const firstCell = row.querySelector('td');
+                        if (firstCell && firstCell.textContent.trim() === idToFind) {
+                            row.classList.add('highlight-row');
+                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+                });
+            }
+
+            // Format timestamp to readable format
+            function formatTimestamp(ts) {
+                if (!ts || ts === "" || ts === "undefined") {
+                    return new Date().toLocaleString(); // Show current time if no timestamp
+                }
+                try {
+                    const date = new Date(ts);
+                    if (isNaN(date.getTime())) {
+                        return new Date().toLocaleString(); // Invalid date, show current time
+                    }
+                    return date.toLocaleString();
+                } catch (e) {
+                    return new Date().toLocaleString();
+                }
+            }
+
+            async function loadData() {
+                try {
+                    statusText.innerHTML = "Refreshing data...";
+
+                    const res = await fetch(API_URL);
+                    if (!res.ok) throw new Error("API error: " + res.status);
+
+                    const json = await res.json();
+                    const records = json.records || [];
+
+                    tbody.innerHTML = "";
+
+                    if (!records.length) {
+                        statusText.innerHTML = "No data found.";
+                        return;
+                    }
+
+                    records.forEach(r => {
+                        const tr = document.createElement("tr");
+                        const timestamp = formatTimestamp(r["Timestamp"]);
+
+                        tr.innerHTML = `
+                            <td>${r["Device Id"] || "-"}</td>
+                            <td>${r["Battery Level"] || "-"}</td>
+                            <td>${r["Temp"] || "-"}</td>
+                            <td>${r["Route From"] || "-"}</td>
+                            <td>${r["Route To"] || "-"}</td>
+                            <td>${timestamp}</td>
+                        `;
+
+                        tbody.appendChild(tr);
+                    });
+
+                    statusText.innerHTML = "Last updated: " + new Date().toLocaleTimeString();
+                } catch (err) {
+                    statusText.innerHTML = "Failed to load data: " + err.message;
+                }
+            }
+
+            loadData();
+            setInterval(loadData, 5000);
+        });
+    </script>
+
+    <script>
+        // Check authentication on page load
+        window.addEventListener("load", function() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                alert("Please login to access live streaming.");
+                window.location.href = "/frontend/users.html";
+            }
+        });
+    </script>
+
+</body>
+</html>
