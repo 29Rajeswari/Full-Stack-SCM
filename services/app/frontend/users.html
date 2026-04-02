@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,600' rel='stylesheet' type='text/css'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
+
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+
+    <!-- Google Identity Services (for default Google Sign-In button) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- FRONTEND LOGIC -->
+    <script>
+      // Aggressive prevention - runs before anything else
+      (function() {
+        // Push multiple states to prevent back navigation
+        for (var i = 0; i < 5; i++) {
+          history.pushState(null, null, location.href);
+        }
+        
+        // Handle popstate (back/forward clicks)
+        window.addEventListener('popstate', function(e) {
+          // Push state again immediately
+          history.pushState(null, null, location.href);
+        });
+        
+        // Handle pageshow (browser cache restoration)
+        window.addEventListener('pageshow', function(e) {
+          if (e.persisted) {
+            for (var i = 0; i < 5; i++) {
+              history.pushState(null, null, location.href);
+            }
+          }
+        });
+      })();
+
+      document.addEventListener("DOMContentLoaded", function () {
+
+        (function preventAutofillAndClear() {
+          const loginForm = document.getElementById("form-login");
+          const userEl = document.getElementById("username-login");
+          const passEl = document.getElementById("password-login");
+
+          if (!loginForm || (!userEl && !passEl)) return;
+
+          try { loginForm.setAttribute("autocomplete", "off"); } catch {}
+
+          [userEl, passEl].forEach(el => {
+            if (!el) return;
+            try {
+              el.setAttribute("autocomplete", "off");
+              el.setAttribute("autocorrect", "off");
+              el.setAttribute("autocapitalize", "none");
+              el.setAttribute("spellcheck", "false");
+            } catch {}
+            // Clear any pre-filled value
+            el.value = "";
+            // Make readonly briefly to block autofill
+            el.readOnly = true;
+          });
+          
+          // Unset readonly shortly after to allow typing
+          setTimeout(() => {
+            [userEl, passEl].forEach(el => { if (el) el.readOnly = false; });
+          }, 50);
+
+          // Clear again on window load (some browsers fill later)
+          window.addEventListener("load", () => {
+            setTimeout(() => {
+              [userEl, passEl].forEach(el => { if (el) el.value = ""; });
+            }, 120);
+          });
+
+          // Clear on focus (if browser attempts to refill on focus)
+          [userEl, passEl].forEach(el => {
+            if (!el) return;
+            el.addEventListener("focus", () => { el.value = ""; });
+          });
+
+          // Also set autocomplete off for all inputs inside the form
+          loginForm.querySelectorAll('input').forEach(i => { try { i.setAttribute('autocomplete','off'); } catch {} });
+        })();
+ 
+
+        /* ========== LOGIN ========== */
+        const loginForm = document.getElementById("form-login");
+        if (loginForm) {
+          loginForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById("username-login").value.trim();
+            const password = document.getElementById("password-login").value;
+
+            const params = new URLSearchParams();
+            params.append("username", username);
+            params.append("password", password);
+
+            try {
+              const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const text = await response.text();
+              let data = null;
+              try { data = JSON.parse(text); } catch {}
+
+              if (!response.ok) {
+                alert((data && data.detail) || text || "Login failed");
+                return;
+              }
+
+              if (data && data.access_token) {
+                localStorage.setItem("access_token", data.access_token);
+                localStorage.setItem("user_role", data.role || "user");
+                localStorage.setItem("username", data.username || "");
+              }
+
+              alert("Login successful!");
+              window.location.href = "/frontend/dashboard.html";
+            } catch (err) {
+              alert("Network error: " + err.message);
+            }
+          });
+        }
+
+        /* ========== SIGNUP ========== */
+        const signupForm = document.getElementById("form-signup");
+        const signUpBtn  = document.getElementById("signUp");
+
+        if (signupForm && signUpBtn) {
+          signUpBtn.addEventListener("click", async function (e) {
+            e.preventDefault();
+
+            const email    = document.getElementById("email").value.trim();
+            const username = document.getElementById("username-signup").value.trim();
+            const password = document.getElementById("password-signup").value;
+            const confirm  = document.getElementById("confirm-password").value;
+
+            if (!email || !username || !password || !confirm) {
+              alert("Please fill all the signup fields.");
+              return;
+            }
+
+            const params = new URLSearchParams();
+            params.append("email", email);
+            params.append("username", username);
+            params.append("password", password);
+            params.append("confirm_password", confirm);
+
+            try {
+              const response = await fetch("/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const text = await response.text();
+              let data = null;
+              try { data = JSON.parse(text); } catch {}
+
+              if (!response.ok) {
+                alert((data?.detail) || "Sign up failed");
+                return;
+              }
+
+              alert("Your account has been created");
+              signupForm.reset();
+            } catch (err) {
+              alert("Network error: " + err.message);
+            }
+          });
+        }
+
+        /* ========== FORGOT PASSWORD POPUP (STEP FLOW) ========== */
+        const forgotOverlay   = document.getElementById("forgot-overlay");
+        const openForgotBtn   = document.getElementById("open-forgot");
+        const closeForgotBtn  = document.getElementById("close-forgot");
+
+        if (openForgotBtn) openForgotBtn.addEventListener("click", () => {
+          forgotOverlay.classList.add("show");
+          resetForgotModalUI();
+        });
+        if (closeForgotBtn) closeForgotBtn.addEventListener("click", () => forgotOverlay.classList.remove("show"));
+        if (forgotOverlay) {
+          forgotOverlay.addEventListener("click", function (e) {
+            if (e.target === forgotOverlay) forgotOverlay.classList.remove("show");
+          });
+        }
+
+        // Elements inside modal
+        const forgotEmailInput           = document.getElementById("forgot-email");
+        const forgotOtpInput             = document.getElementById("forgot-otp");
+        const forgotNewPasswordInput     = document.getElementById("forgot-new-password");
+        const forgotConfirmPasswordInput = document.getElementById("forgot-confirm-password");
+
+        const stepEmail    = document.getElementById("fp-step-email");
+        const stepOtp      = document.getElementById("fp-step-otp");
+        const stepPassword = document.getElementById("fp-step-password");
+
+        const forgotSendOtpBtn    = document.getElementById("forgot-send-otp");
+        const forgotVerifyOtpBtn  = document.getElementById("forgot-verify-otp");
+        const forgotResetBtn      = document.getElementById("forgot-reset-btn");
+
+        function resetForgotModalUI() {
+          if (forgotEmailInput)  forgotEmailInput.value  = "";
+          if (forgotOtpInput)    forgotOtpInput.value    = "";
+          if (forgotNewPasswordInput)     forgotNewPasswordInput.value     = "";
+          if (forgotConfirmPasswordInput) forgotConfirmPasswordInput.value = "";
+
+          if (stepEmail)    stepEmail.style.display    = "block";
+          if (stepOtp)      stepOtp.style.display      = "none";
+          if (stepPassword) stepPassword.style.display = "none";
+        }
+
+        // Allow only digits for OTP, max 5 chars
+        if (forgotOtpInput) {
+          forgotOtpInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, "").slice(0, 5);
+          });
+        }
+
+        // STEP 1: Send OTP (asks only email)
+        if (forgotSendOtpBtn) {
+          forgotSendOtpBtn.addEventListener("click", async function () {
+            const email = (forgotEmailInput?.value || "").trim();
+
+            if (!email) {
+              alert("Please enter your email to receive OTP.");
+              return;
+            }
+
+            const params = new URLSearchParams();
+            params.append("email", email);
+
+            try {
+              const response = await fetch("/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const text = await response.text();
+              let data = null;
+              try { data = JSON.parse(text); } catch {}
+
+              if (!response.ok) {
+                alert((data && data.detail) || text || "Failed to send OTP");
+                return;
+              }
+
+              // Pop-up info
+              alert("A 5-digit OTP has been sent to your email.");
+
+              // Move to STEP 2 – show OTP section
+              if (stepOtp)   stepOtp.style.display = "block";
+              if (stepEmail) stepEmail.style.display = "block"; // keep email visible but user can edit if needed
+              if (forgotOtpInput) forgotOtpInput.focus();
+
+            } catch (err) {
+              alert("Network error: " + err.message);
+            }
+          });
+        }
+
+        // STEP 2: Verify OTP (front-end step; real check happens on reset)
+        if (forgotVerifyOtpBtn) {
+          forgotVerifyOtpBtn.addEventListener("click", function () {
+            const otp = (forgotOtpInput?.value || "").trim();
+
+            if (!otp) {
+              alert("Please enter the OTP you received.");
+              return;
+            }
+            if (otp.length !== 5 || !/^\d{5}$/.test(otp)) {
+              alert("Please enter the 5-digit numeric OTP.");
+              return;
+            }
+
+            // OTP "verified" for UI; real validation occurs on /reset-password
+            alert("OTP verified. Please set your new password.");
+
+            // Show STEP 3 – password fields
+            if (stepPassword) stepPassword.style.display = "block";
+            if (forgotNewPasswordInput) forgotNewPasswordInput.focus();
+          });
+        }
+
+        // STEP 3: Reset Password (calls backend, validates OTP + new password)
+        if (forgotResetBtn) {
+          forgotResetBtn.addEventListener("click", async function () {
+            const email   = (forgotEmailInput?.value || "").trim();
+            const otp     = (forgotOtpInput?.value || "").trim();
+            const newPass = (forgotNewPasswordInput?.value || "");
+            const confirm = (forgotConfirmPasswordInput?.value || "");
+
+            if (!email || !otp || !newPass || !confirm) {
+              alert("Please fill Email, OTP, New Password and Confirm Password.");
+              return;
+            }
+
+            if (otp.length !== 5 || !/^\d{5}$/.test(otp)) {
+              alert("Please enter the 5-digit numeric OTP.");
+              return;
+            }
+
+            const params = new URLSearchParams();
+            params.append("email", email);
+            params.append("otp", otp);
+            params.append("new_password", newPass);
+            params.append("confirm_password", confirm);
+
+            try {
+              const response = await fetch("/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const text = await response.text();
+              let data = null;
+              try { data = JSON.parse(text); } catch {}
+
+              if (!response.ok) {
+                alert((data && data.detail) || text || "Failed to reset password");
+                return;
+              }
+
+              alert("Your password has been reset successfully. Please log in with your new password.");
+              if (forgotOverlay) forgotOverlay.classList.remove("show");
+              resetForgotModalUI();
+            } catch (err) {
+              alert("Network error: " + err.message);
+            }
+          });
+        }
+      });
+
+      // ========== GOOGLE SSO CALLBACK ==========
+      async function handleGoogleCredentialResponse(response) {
+        try {
+          const id_token = response.credential;
+
+          const res = await fetch("/auth/google", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id_token: id_token })
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert("Google login failed: " + (err.detail || res.statusText));
+            return;
+          }
+
+          const data = await res.json();
+
+          if (data.access_token) {
+            localStorage.setItem("access_token", data.access_token);
+          }
+
+          alert("Logged in with Google: " + (data.email || "User"));
+          window.location.href = "/frontend/dashboard.html";
+        } catch (e) {
+          console.error(e);
+          alert("Error during Google login");
+        }
+      }
+
+      window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
+    </script>
+
+    <title>Modern Form</title>
+    <style>
+      /* ORIGINAL CSS – UNCHANGED */
+      @charset "UTF-8";
+      body {
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        width: 100% !important;
+        box-sizing: border-box;
+        font-family: "Roboto", sans-serif;
+      }
+      .backRight { position:absolute; right:0; width:50%; height:100%; background:#03A9F4; }
+      .backLeft { position:absolute; left:0; width:50%; height:100%; background:#673AB7; }
+      #back { width:100%; height:100%; position:absolute; z-index:-999; }
+      .canvas-back { position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; }
+
+      #slideBox { width:50%; height:100%; overflow:hidden; margin-left:50%; position:absolute;
+        box-shadow:0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22); }
+
+      .topLayer { width:200%; height:100%; position:relative; left:-100%; }
+
+      label { font-size:0.8em; text-transform:uppercase; }
+      input { background:transparent; border:0; outline:0; font-size:1em; padding:2px 0; margin-top:0.1em; }
+
+      .left { width:50%; height:100%; overflow:scroll; background:#2C3034; left:0; position:absolute; }
+      .left label { color:#e3e3e3; }
+      .left input { border-bottom:1px solid #e3e3e3; color:#e3e3e3; }
+      .left input:focus { border-color:#03A9F4; color:#03A9F4; }
+
+      .right { width:50%; height:100%; overflow:scroll; background:#f9f9f9; right:0; position:absolute; }
+      .right label { color:#212121; }
+      .right input { border-bottom:1px solid #212121; }
+      .right input:focus { border-color:#673AB7; }
+
+      .content { display:flex; flex-direction:column; justify-content:center;
+        min-height:100%; width:80%; margin:0 auto; position:relative; }
+
+
+        
+      .content h2 { font-weight:300; font-size:2.6em; margin:0.2em 0 0.1em; }
+      .left .content h2 { color:#03A9F4; }
+      .right .content h2 { color:#673AB7; }
+
+      .form-element { margin:1.6em 0; }
+      .form-stack { display:flex; flex-direction:column; }
+
+      .link-btn { background:none; border:none; color:#673AB7; font-size:0.8em; cursor:pointer; }
+
+      .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none;
+        justify-content:center; align-items:center; z-index:9999; }
+      .modal-overlay.show { display:flex; }
+
+      .modal { background:#fff; padding:20px; border-radius:14px; width:90%; max-width:420px;
+        box-shadow:0 10px 40px rgba(0,0,0,0.25); }
+
+      button { padding:0.8em 1.2em; text-transform:uppercase; border:0; cursor:pointer; }
+      button.signup { background:#03A9F4; color:#fff; }
+      button.login { background:#673AB7; color:#fff; }
+
+      button {
+        border-radius: 10px !important;
+        box-shadow: 0 4px px rgba(0, 0, 0, 0.1) !important;}
+
+      /* Forgot password text – smaller and aligned to the right under the input */
+      #open-forgot {
+      font-size: 0.75em !important;   /* smaller text */
+      align-self: flex-end;           /* move to right in flex column */
+      margin-top: 4px !important;
+      margin-right: 4px !important;
+      text-align: right !important;
+      float: none !important;         /* cancel old float behavior */
+      }
+      /* Forgot Password Modal improvements */
+      #forgot-overlay .modal {
+      padding: 24px !important;              /* more breathing space */
+      }
+
+      #forgot-overlay .modal h3 {
+      font-size: 1.3em !important;           /* slightly smaller heading */
+      margin-bottom: 10px !important;
+      color: #000000 !important;             /* black color for visibility */
+      }
+
+      #fp-step-email label,
+      #fp-step-otp label,
+      #fp-step-password label {
+      font-size: 0.75em !important;          /* smaller labels */
+      margin-bottom: 4px !important;
+      color: #000000 !important;             /* black color for visibility */
+      }
+
+      #fp-step-email input,
+      #fp-step-otp input,
+      #fp-step-password input {
+      font-size: 0.85em !important;          /* smaller text */
+      padding: 6px 4px !important;           /* smaller input spacing */
+      margin-bottom: 10px !important;
+      }
+
+/* Buttons inside modal */
+      #forgot-overlay button {
+      padding: 0.5em 1em !important;         /* reduce button size */
+      font-size: 0.75em !important;
+      margin-top: 6px !important;
+      }
+
+/* Close button spacing */
+      #close-forgot {
+      margin-top: 12px !important;
+      }
+    /* Remove scrollbars and bottom white space from both login & signup pages */
+      .left, 
+      .right {
+      overflow: hidden !important;
+      }
+
+/* Prevent page-level scrollbar causing white bar */
+      body {
+      overflow: hidden !important;
+      }
+
+      body {
+      background: url('/frontend/pics/blue-neon-frame-dark-background_53876-113902.avif');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      }
+
+      /* ========= NEW OVERRIDES TO MATCH OTHER PAGES ========= */
+      /* Darker neon-style background like other pages */
+      body {
+        background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
+                    radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
+                    #000814 !important;
+        color: #ffffff;
+      }
+
+      .backRight {
+        background: linear-gradient(135deg, #00eaff, #0077b6);
+      }
+      .backLeft {
+        background: linear-gradient(135deg, #571676, #722895);
+      }
+      .left {
+        background: linear-gradient(135deg, #001a33, #00334d);
+      }
+      .right {
+        background: linear-gradient(135deg, #f6f4f6, #fcfbfc);
+      }
+      .left label {
+        color: #00eaff;
+      }
+      .left input {
+        border-bottom: 1px solid #00eaff;
+        color: #00eaff;
+      }
+      .left input:focus {
+        border-color: #00aaff;
+        color: #00aaff;
+      }
+      .right label {
+        color: #9743be;
+      }
+      .right input {
+        border-bottom: 1px solid#9743be;
+        color: #9743be;
+      }
+      .right input:focus {
+        border-color: #9743be;
+        color: #9743be;
+      }
+
+
+    </style>
+  </head>
+
+  <body>
+    <div id="back">
+      <canvas id="canvas" class="canvas-back"></canvas>
+      <div class="backRight"></div>
+      <div class="backLeft"></div>
+    </div>
+
+    <div id="slideBox">
+      <div class="topLayer">
+
+        <!-- SIGNUP SIDE -->
+        <div class="left">
+          <div class="content">
+            <h2>Sign Up</h2>
+            <form id="form-signup" method="post" onsubmit="return false;">
+              <div class="form-element form-stack">
+                <label>Email</label>
+                <input id="email" type="email">
+              </div>
+              <div class="form-element form-stack">
+                <label>Username</label>
+                <input id="username-signup" type="text">
+              </div>
+              <div class="form-element form-stack">
+                <label>Password</label>
+                <input id="password-signup" type="password">
+              </div>
+              <div class="form-element form-stack">
+                <label>Confirm Password</label>
+                <input id="confirm-password" type="password">
+              </div>
+
+              <div class="g-recaptcha" data-sitekey="6LcukiIrAAAAALhQRLiTzQemejjguv-_4xtZPfZH"></div>
+
+              <div class="form-element form-submit">
+                <button id="signUp" class="signup" type="button">Sign up</button>
+                <button id="goLeft" class="signup off" type="button">Log In</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- LOGIN SIDE -->
+        <div class="right">
+          <div class="content">
+            <h2>Login</h2>
+            <form id="form-login" onsubmit="return false;">
+              <div class="form-element form-stack">
+                <label>Username</label>
+                <input id="username-login" type="text">
+              </div>
+
+              <div class="form-element form-stack">
+                <label>Password</label>
+                <input id="password-login" type="password">
+                <button id="open-forgot" type="button" class="link-btn">Forgot password?</button>
+              </div>
+
+              <div class="form-element form-submit">
+                <button id="logIn" class="login" type="submit">Log In</button>
+                <button id="goRight" class="login off" type="button">Sign Up</button>
+              </div>
+
+              <p style="margin-top:20px; font-size:0.85rem; color:#00334d;">OR LOGIN WITH</p>
+
+              <div
+                id="g_id_onload"
+                data-client_id="309364565552-8adpfo1dc44383jsd8atit01kt0lhgib.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleGoogleCredentialResponse"
+                data-auto_prompt="false">
+              </div>
+
+              <div
+                class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD MODAL WITH STEP FLOW -->
+    <div id="forgot-overlay" class="modal-overlay">
+      <div class="modal">
+        <h3>Reset Password</h3>
+
+        <!-- STEP 1: EMAIL -->
+        <div id="fp-step-email">
+          <label>Email</label>
+          <input id="forgot-email" type="email">
+          <br>
+          <button id="forgot-send-otp" class="signup" type="button">Send OTP</button>
+        </div>
+
+        <!-- STEP 2: OTP (hidden initially) -->
+        <div id="fp-step-otp" style="display:none; margin-top:1rem;">
+          <label>OTP</label>
+          <input id="forgot-otp" type="text" maxlength="5">
+          <br>
+          <button id="forgot-verify-otp" class="login" type="button">Verify OTP</button>
+        </div>
+
+        <!-- STEP 3: NEW PASSWORD (hidden initially) -->
+        <div id="fp-step-password" style="display:none; margin-top:1rem;">
+          <label>New Password</label>
+          <input id="forgot-new-password" type="password">
+
+          <label>Confirm Password</label>
+          <input id="forgot-confirm-password" type="password">
+
+          <br>
+          <button id="forgot-reset-btn" class="login" type="button">Reset Password</button>
+        </div>
+
+        <br>
+        <button id="close-forgot" class="btn-secondary" type="button">Close</button>
+      </div>
+    </div>
+
+    <!-- Canvas Animation Script (UNCHANGED) -->
+    <script>
+      $(document).ready(function(){
+        $('#goRight').on('click', function(){
+          $('#slideBox').animate({'marginLeft' : '0'});
+          $('.topLayer').animate({'marginLeft' : '100%'});
+        });
+        $('#goLeft').on('click', function(){
+          if (window.innerWidth > 769){
+            $('#slideBox').animate({'marginLeft' : '50%'});
+          } else {
+            $('#slideBox').animate({'marginLeft' : '20%'});
+          }
+          $('.topLayer').animate({'marginLeft': '0'});
+        });
+      });
+
+      paper.install(window);
+      paper.setup(document.getElementById("canvas"));
+
+      var canvasWidth, canvasHeight, canvasMiddleX, canvasMiddleY;
+      var shapeGroup = new Group();
+      var positionArray = [];
+
+      function getCanvasBounds() {
+        canvasWidth = view.size.width;
+        canvasHeight = view.size.height;
+        canvasMiddleX = canvasWidth / 2;
+        canvasMiddleY = canvasHeight / 2;
+
+        var p1 = { x: (canvasMiddleX / 2) + 100, y: 100 };
+        var p2 = { x: 200, y: canvasMiddleY };
+        var p3 = { x: (canvasMiddleX - 50) + (canvasMiddleX / 2), y: 150 };
+        var p4 = { x: 0, y: canvasMiddleY + 100 };
+        var p5 = { x: canvasWidth - 130, y: canvasHeight - 75 };
+        var p6 = { x: canvasMiddleX + 80, y: canvasHeight - 50 };
+        var p7 = { x: canvasWidth + 60, y: canvasMiddleY - 50 };
+        var p8 = { x: canvasMiddleX + 100, y: canvasMiddleY + 100 };
+
+        positionArray = [p3, p2, p5, p4, p1, p6, p7, p8];
+      }
+
+      function initializeShapes() {
+        getCanvasBounds();
+
+        var paths = [
+          'M231,352l445-156L600,0L452,54L331,3L0,48L231,352',
+          'M0,0l64,219L29,343l535,30L478,37l-133,4L0,0z',
+          'M0,65l16,138l96,107l270-2L470,0L337,4L0,65z',
+          'M333,0L0,94l64,219L29,437l570-151l-196-42L333,0',
+          'M331.9,3.6l-331,45l231,304l445-156l-76-196l-148,54L331.9,3.6z',
+          'M389,352l92-113l195-43l0,0l0,0L445,48l-80,1L122.7,0L0,275.2L162,297L389,352',
+          'M 50 100 L 300 150 L 550 50 L 750 300 L 500 250 L 300 450 L 50 100',
+          'M 700 350 L 500 350 L 700 500 L 400 400 L 200 450 L 250 350 L 100 300 L 150 50 L 350 100 L 250 150 L 450 150 L 400 50 L 550 150 L 350 250 L 650 150 L 650 50 L 700 150 L 600 250 L 750 250 L 650 300 L 700 350 '
+        ];
+
+        for (var i = 0; i < paths.length; i++) {
+          var headerShape = new Path({
+            strokeColor: 'rgba(255, 255, 255, 0.5)',
+            strokeWidth: 2,
+            parent: shapeGroup
+          });
+          headerShape.pathData = paths[i];
+          headerShape.scale(2);
+          headerShape.position = positionArray[i];
+        }
+      }
+
+      initializeShapes();
+
+      view.onFrame = function (event) {
+        if (event.count % 4 === 0) {
+          for (var i = 0; i < shapeGroup.children.length; i++) {
+            shapeGroup.children[i].rotate(i % 2 === 0 ? -0.1 : 0.1);
+          }
+        }
+      };
+
+      view.onResize = function () {
+        getCanvasBounds();
+        for (var i = 0; i < shapeGroup.children.length; i++) {
+          shapeGroup.children[i].position = positionArray[i];
+        }
+      };
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,8 @@
+lib64
+echo "services/bin/" >> .gitignore
+echo "services/app/.env" >> .gitignore
+echo ".env" >> .gitignore
+echo "__pycache__/" >> .gitignore
+echo "*.pyc" >> .gitignore
+
+git add .gitignore

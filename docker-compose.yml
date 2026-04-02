@@ -1,0 +1,68 @@
+services:
+  backend:
+    build:
+      context: .                       # root: FULLSTACK
+      dockerfile: services/app/Dockerfile
+    container_name: backend-1
+    env_file:
+      - ./services/app/.env
+    ports:
+      - "8000:8000"
+
+  producer:
+    build:
+      context: .
+      dockerfile: services/producer/Dockerfile
+    container_name: producer-1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file:
+      - ./services/app/.env
+
+  consumer:
+    build:
+      context: .
+      dockerfile: services/consumer/Dockerfile
+    container_name: consumer-1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file:
+      - ./services/app/.env
+
+  kafka:
+    image: bitnamilegacy/kafka:latest
+    container_name: kafka-1
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # Single-node KRaft mode (no ZooKeeper)
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+      # Allow Kafka to auto-create topics when producer first sends
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+
+      # Limit Kafka JVM heap to 256 MB
+      - KAFKA_HEAP_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+    healthcheck:
+      test: ["CMD", "bash", "-c", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  kafka_data:

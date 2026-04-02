@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
+    <title>Modern Form</title>
+
+    <!-- Prevent back/forward navigation -->
+    <script>
+      (function() {
+        for (var i = 0; i < 5; i++) {
+          history.pushState(null, null, location.href);
+        }
+        window.addEventListener('popstate', function(e) {
+          history.pushState(null, null, location.href);
+        });
+        window.addEventListener('pageshow', function(e) {
+          if (e.persisted) {
+            for (var i = 0; i < 5; i++) {
+              history.pushState(null, null, location.href);
+            }
+          }
+        });
+      })();
+    </script>
+
+    <style>
+      @charset "UTF-8";
+
+      /* ========= ORIGINAL DASHBOARD STYLES ========= */
+
+      /* Top Navigation Bar */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 30px 40px;
+        gap: 40px;
+        box-sizing: border-box;
+        background: rgba(255,255,255,0.06);
+      }
+
+      .brand img {
+        height: 50px;
+        border-radius: 5px;
+        box-shadow: 0 4px 12px rgba(185, 231, 232, 0.2);
+      }
+
+      .nav-menu {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-menu a, .logout-btn {
+        color: #5a2bcf;
+        font-weight: 500;
+        text-decoration: none;
+        padding: 10px 16px;
+        border-radius: 16px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+        cursor: pointer;
+        background: rgba(255,255,255,0.55);
+        box-shadow: 0 4px 10px rgba(128, 90, 195, 0.25);
+      }
+
+      .nav-menu a:hover, .logout-btn:hover {
+        background: linear-gradient(90deg, #c47bff, #7ed5ff);
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(160, 39, 174, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .nav-menu a.active {
+        background: linear-gradient(90deg, #7b2cbf, #1fa2f3);
+        color: #fff;
+      }
+
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        width: 100% !important;
+        box-sizing: border-box;
+        font-family: "Roboto", sans-serif;
+        background: radial-gradient(circle at top left,rgba(209, 148, 227, 0.5),#cbe2f4);
+      }
+
+      .canvas-back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
+        z-index: 0;
+      }
+
+      #slideBox {
+        width: 50%;
+        max-height: 100%;
+        height: 100%;
+        overflow: hidden;
+        margin-left:50%;
+        position: absolute;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      }
+
+      .topLayer {
+        width: 200%;
+        height: 800%;
+        position: relative;
+        left: -100%;
+      }
+
+      label {
+        font-size: 1.9em;
+        text-transform: uppercase;
+      }
+
+      input {
+        background-color: transparent;
+        border: 0;
+        outline: 0;
+        font-size: 1em;
+        padding: 8px 1px;
+        margin-top: 0.1em;
+      }
+
+      .left {
+        width: 50%;
+        height: 80%;
+        overflow: scroll;
+        background: linear-gradient(135deg, #5b3ac7, #c89cff);
+        left: 0;
+        position: absolute;
+      }
+
+      .right {
+        width: 50%;
+        height: 80%;
+        overflow: scroll;
+        background: linear-gradient(135deg, #72d5ff, #7df6d8);
+        right: 0;
+        position: absolute;
+      }
+
+      .content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100%;
+        width: 80%;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      /* ========= NEW OVERRIDES TO MATCH OTHER PAGES ========= */
+
+      /* Darker neon-style background like other pages */
+      body {
+        background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
+                    radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
+                    #000814 !important;
+        color: #ffffff;
+      }
+
+      /* SCMXpertLite text logo (hide img, keep HTML same) */
+      .brand {
+        display: flex;
+        align-items: center;
+      }
+
+      .brand img {
+        display: none !important;
+      }
+
+      .brand::before {
+        content: "SCMXpertLite";
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        color: #f6f4f7;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      }
+
+      /* Navbar pills like create-shipments / shipments pages */
+      .topbar {
+        margin-bottom: 10px !important;
+        background: transparent;
+      }
+
+      .nav-menu {
+        gap: 14px !important;
+        flex-wrap: nowrap !important;
+        margin-left: 24px !important;
+      }
+
+      .topbar .nav-menu a,
+      .topbar .logout-btn {
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        padding: 8px 18px !important;
+        border-radius: 999px !important;
+        background: #ffffff !important;
+        color: #1c1233 !important;
+        box-shadow: 0 10px 24px rgba(138, 92, 255, 0.25) !important;
+        white-space: nowrap !important;
+        border: none !important;
+      }
+
+      .topbar .nav-menu a.active {
+        background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+        color: #ffffff !important;
+        box-shadow: 0 12px 30px rgba(120, 80, 255, 0.55) !important;
+      }
+
+      .topbar .nav-menu a:hover,
+      .topbar .logout-btn:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #b06bff, #6b4dff) !important;
+        color: #ffffff !important;
+        box-shadow: 0 14px 32px rgba(120, 80, 255, 0.7) !important;
+      }
+
+      .topbar .logout-btn {
+        background: #ff5b5b !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+        padding: 8px 20px !important;
+      }
+
+      .topbar .logout-btn:hover {
+        background: #ff4242 !important;
+        box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <!-- Top Navigation Bar -->
+    <header class="topbar" role="navigation" aria-label="Main navigation">
+      <div class="brand">
+        <img src="/static/logo.jpg" alt="Logo" />
+      </div>
+
+      <nav class="nav-menu" role="menubar" aria-label="Primary">
+        <a href="/frontend/dashboard.html" class="active"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
+        <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+        <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+        <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+      </nav>
+    </header>
+
+    <!-- START: Greeting + Cards -->
+    <div style="text-align:center; margin-top:40px; position:relative; z-index:10;">
+      <h1 style="font-size:48px; font-weight:300; color:#f3e9ff;">
+        Hi <span id="user-role-display" style="color:#ffb5ff; font-weight:600;">User</span>,
+      </h1>
+
+      <h2 style="margin-top:10px; font-size:36px; color:#ffffff;">
+        Welcome to SCMXpertLite
+      </h2>
+
+      <div style="display:flex; justify-content:center; gap:60px; margin-top:60px; flex-wrap:wrap;">
+
+        <!-- CREATE SHIPMENT CARD -->
+        <div style="
+          width:360px;
+          background:rgba(15,20,50,0.85);
+          padding:40px;
+          border-radius:20px;
+          box-shadow:0 18px 40px rgba(0,0,0,0.6);
+          backdrop-filter:blur(12px);
+          border:1px solid rgba(127,93,255,0.4);
+        ">
+          <h3 style="font-size:24px; color:#f5e7ff; font-weight:400; margin-bottom:25px;">
+            Create a New Shipment
+          </h3>
+
+          <a href="/frontend/createshipments.html"
+             style="
+               display:inline-block;
+               padding:14px 30px;
+               background:linear-gradient(90deg,#8f5cff,#f67ac6);
+               color:#0f0d1f;
+               font-size:16px;
+               border-radius:30px;
+               text-decoration:none;
+               font-weight:600;
+               box-shadow:0 6px 16px rgba(104, 6, 129, 0.7);
+             ">
+            CREATE SHIPMENT
+          </a>
+        </div>
+
+        <!-- DEVICE DATA CARD -->
+        <div style="
+          width:360px;
+          background:rgba(15,20,50,0.85);
+          padding:40px;
+          border-radius:20px;
+          box-shadow:0 18px 40px rgba(0,0,0,0.6);
+          backdrop-filter:blur(12px);
+          border:1px solid rgba(127,93,255,0.4);
+        ">
+          <h3 style="font-size:24px; color:#f5e7ff; font-weight:400; margin-bottom:25px;">
+            View Device Data Stream
+          </h3>
+
+          <a href='/frontend/live_streaming.html'
+             style="
+               display:inline-block;
+               padding:14px 30px;
+               background:linear-gradient(90deg,#8f5cff,#f67ac6);
+               color:#0f0d1f;
+               font-size:16px;
+               border-radius:30px;
+               text-decoration:none;
+               font-weight:600;
+               box-shadow:0 6px 16px rgba(104, 6, 129, 0.7);
+             ">
+            DEVICE DATA STREAM
+          </a>
+        </div>
+
+      </div>
+    </div>
+    <!-- END: Greeting + Cards -->
+
+    <div id="back">
+      <canvas id="canvas" class="canvas-back"></canvas>
+      <div class="backRight"></div>
+      <div class="backLeft"></div>
+    </div>
+
+    <script>
+      // your existing Paper.js script stays untouched
+    </script>
+
+    <script>
+      // Check authentication on page load
+      window.addEventListener("load", function() {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          alert("Please login to access dashboard.");
+          window.location.href = "/frontend/users.html";
+        } else {
+          // Update role display based on user_role
+          const userRole = localStorage.getItem("user_role") || "user";
+          const username = localStorage.getItem("username") || "";
+          const roleDisplay = document.getElementById("user-role-display");
+          
+          if (roleDisplay) {
+            if (userRole === "admin") {
+              roleDisplay.textContent = "Admin";
+              roleDisplay.style.color = "#ffb347"; // Orange color for admin
+            } else {
+              roleDisplay.textContent = username || "User";
+              roleDisplay.style.color = "#ffb5ff"; // Pink color for user
+            }
+          }
+        }
+      });
+    </script>
+
+  </body>
+</html>
