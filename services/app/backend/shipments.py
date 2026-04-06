@@ -1,6 +1,6 @@
 # backend/shipments.py
 
-from fastapi import APIRouter, Form, HTTPException, Query, Depends, Header
+from fastapi import APIRouter, Form, HTTPException, Query, Depends, Header, Request
 from fastapi.security import OAuth2PasswordBearer
 from pymongo import MongoClient
 from datetime import datetime
@@ -166,6 +166,142 @@ async def create_shipment(
         "message": "Shipment created successfully",
         "shipment": serialize_shipment(saved)
     }
+
+# ---------- UPDATE SHIPMENT ----------
+
+@router.put("/update/{shipment_id}")
+async def update_shipment(
+    shipment_id: str,
+    request: Request,
+    user: dict = Depends(get_current_user)
+):
+    """
+    PUT http://127.0.0.1:8000/api/shipments/update/{shipment_id}
+    Update an existing shipment.
+    
+    Role-based access:
+    - Admin: can update any shipment
+    - User: can only update their own shipments
+    
+    Expects JSON body with shipment fields.
+    """
+    from bson import ObjectId
+    
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    
+    shipment_number = (data.get("shipment_number") or "").strip()
+    route_to = data.get("route_to", "")
+    route_from = data.get("route_from", "")
+    device = data.get("device", "")
+    po_number = data.get("po_number", "")
+    ndc_number = data.get("ndc_number", "")
+    serial_goods = data.get("serial_goods", "")
+    container_number = data.get("container_number", "")
+    goods_type = data.get("goods_type", "")
+    expected_delivery_date = data.get("expected_delivery_date", "")
+    delivery_number = data.get("delivery_number", "")
+    batch_id = data.get("batch_id", "")
+    description = data.get("description", "")
+    
+    if not shipment_number:
+        raise HTTPException(status_code=400, detail="Shipment number is required")
+    
+    # Validate shipment exists
+    try:
+        obj_id = ObjectId(shipment_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid shipment ID")
+    
+    shipment_doc = shipments_collection.find_one({"_id": obj_id})
+    if not shipment_doc:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+    
+    # Check permissions
+    username = user.get("username", "")
+    user_is_admin = is_admin(user)
+    
+    if not user_is_admin and shipment_doc.get("created_by") != username:
+        raise HTTPException(status_code=403, detail="You don't have permission to update this shipment")
+    
+    # Update document
+    update_data = {
+        "shipment_number": shipment_number,
+        "route_to": route_to,
+        "route_from": route_from,
+        "device": device,
+        "po_number": po_number,
+        "ndc_number": ndc_number,
+        "serial_goods": serial_goods,
+        "container_number": container_number,
+        "goods_type": goods_type,
+        "expected_delivery_date": expected_delivery_date,
+        "delivery_number": delivery_number,
+        "batch_id": batch_id,
+        "description": description,
+    }
+    
+    result = shipments_collection.update_one(
+        {"_id": obj_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to update shipment")
+    
+    updated = shipments_collection.find_one({"_id": obj_id})
+    
+    return {
+        "message": "Shipment updated successfully",
+        "shipment": serialize_shipment(updated)
+    }
+
+
+# ---------- DELETE SHIPMENT ----------
+
+@router.delete("/delete/{shipment_id}")
+async def delete_shipment(
+    shipment_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    DELETE http://127.0.0.1:8000/api/shipments/delete/{shipment_id}
+    Delete a shipment.
+    
+    Role-based access:
+    - Admin: can delete any shipment
+    - User: can only delete their own shipments
+    """
+    from bson import ObjectId
+    
+    # Validate shipment exists
+    try:
+        obj_id = ObjectId(shipment_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid shipment ID")
+    
+    shipment_doc = shipments_collection.find_one({"_id": obj_id})
+    if not shipment_doc:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+    
+    # Check permissions
+    username = user.get("username", "")
+    user_is_admin = is_admin(user)
+    
+    if not user_is_admin and shipment_doc.get("created_by") != username:
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this shipment")
+    
+    result = shipments_collection.delete_one({"_id": obj_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to delete shipment")
+    
+    return {
+        "message": "Shipment deleted successfully"
+    }
+
 
 # ---------- LIST SHIPMENTS ----------
 

@@ -7,8 +7,67 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
 
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <!-- Google reCAPTCHA v2 -->
+    <script>
+      console.log('Loading reCAPTCHA v2 script...');
+      console.log('Site key: 6Lch9agsAAAAALm_jjlLL602Pi-4McTfuI4MFhmd');
+      console.log('Timestamp:', new Date().toISOString());
+      
+      // Check if we can reach Google's servers
+      fetch('https://www.google.com/recaptcha/api.js', { method: 'HEAD', mode: 'no-cors' })
+        .then(() => console.log('✓ Can reach Google reCAPTCHA servers'))
+        .catch(err => console.error('✗ Cannot reach Google reCAPTCHA servers:', err));
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoaded&render=explicit"></script>
+    
+    <script>
+      // Global callback for reCAPTCHA load
+      window.onRecaptchaLoaded = function() {
+        console.log('✓ reCAPTCHA API loaded successfully at', new Date().toISOString());
+        console.log('grecaptcha object:', typeof grecaptcha);
+        console.log('Available grecaptcha methods:', Object.keys(grecaptcha || {}));
+        
+        // Check which version of reCAPTCHA is loaded
+        const hasRender = typeof grecaptcha.render === 'function';
+        const hasExecute = typeof grecaptcha.execute === 'function';
+        
+        console.log('grecaptcha.render available:', hasRender);
+        console.log('grecaptcha.execute available:', hasExecute);
+        
+        if (hasRender) {
+          console.log('✓ reCAPTCHA v2 (Checkbox) detected - render function available');
+          if (window.initRecaptchaNow) {
+            console.log('Calling initRecaptchaNow...');
+            window.initRecaptchaNow();
+          } else {
+            console.warn('initRecaptchaNow not yet defined, will retry on DOMContentLoaded');
+          }
+        } else if (hasExecute) {
+          console.error('✗ reCAPTCHA v3 (Invisible) detected - this page requires reCAPTCHA v2!');
+          console.error('   Please use a reCAPTCHA v2 site key from Google Admin Console');
+          console.error('   Site key should be for "reCAPTCHA v2" > "I\'m not a robot" Checkbox');
+          
+          // Show error in container
+          setTimeout(() => {
+            const container = document.getElementById('g-recaptcha-container');
+            if (container) {
+              container.innerHTML = `
+                <div class="recaptcha-error">
+                  <strong>⚠ Wrong reCAPTCHA Version</strong><br><br>
+                  The site key is for reCAPTCHA v3 (invisible), but this form needs reCAPTCHA v2 (checkbox).<br><br>
+                  <strong>Solution:</strong><br>
+                  1. Go to <a href="https://www.google.com/recaptcha/admin" target="_blank">Google reCAPTCHA Admin</a><br>
+                  2. Create a new key with type: <strong>reCAPTCHA v2</strong><br>
+                  3. Choose: <strong>"I'm not a robot" Checkbox</strong><br>
+                  4. Update the site key in users.html and .env file
+                </div>`;
+            }
+          }, 500);
+        } else {
+          console.error('✗ reCAPTCHA loaded but neither render nor execute functions found!');
+        }
+      };
+    </script>
 
     <!-- Google Identity Services (for default Google Sign-In button) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -39,6 +98,252 @@
       })();
 
       document.addEventListener("DOMContentLoaded", function () {
+
+        // Initialize reCAPTCHA explicitly
+        let recaptchaWidgetId = null;
+        let isInitializing = false; // Prevent multiple simultaneous initializations
+        
+        function initRecaptcha() {
+          // Prevent multiple simultaneous initializations
+          if (isInitializing) {
+            console.log('Initialization already in progress, skipping...');
+            return false;
+          }
+          
+          // If already initialized, don't try again
+          if (recaptchaWidgetId !== null) {
+            console.log('reCAPTCHA already initialized with widget ID:', recaptchaWidgetId);
+            return true;
+          }
+          
+          if (typeof grecaptcha === 'undefined') {
+            console.warn('⚠ grecaptcha is undefined - reCAPTCHA script not loaded yet');
+            console.warn('   This usually means:');
+            console.warn('   1. Google servers are unreachable');
+            console.warn('   2. Ad blocker is blocking the script');
+            console.warn('   3. Network issue');
+            return false;
+          }
+          
+          console.log('✓ grecaptcha object is available');
+          console.log('grecaptcha.render type:', typeof grecaptcha.render);
+          
+          // Verify render function exists
+          if (typeof grecaptcha.render !== 'function') {
+            console.error('✗ grecaptcha.render is not a function!');
+            console.error('   Available grecaptcha methods:', Object.keys(grecaptcha));
+            return false;
+          }
+          
+          isInitializing = true; // Set flag to prevent concurrent calls
+          
+          try {
+            const container = document.getElementById('g-recaptcha-container');
+            if (!container) {
+              console.error('✗ reCAPTCHA container element not found in DOM');
+              isInitializing = false;
+              return false;
+            }
+            
+            // Check if container already has content (prevent duplicate rendering)
+            if (container.children.length > 0) {
+              console.log('Container already has content, clearing it first...');
+              container.innerHTML = '';
+            }
+            
+            // Check if container is visible
+            const rect = container.getBoundingClientRect();
+            console.log('Container dimensions:', rect.width, 'x', rect.height);
+            console.log('Container is visible:', rect.width > 0 && rect.height > 0);
+            
+            const siteKey = '6Lch9agsAAAAALm_jjlLL602Pi-4McTfuI4MFhmd';
+            console.log('Rendering reCAPTCHA with site key:', siteKey);
+            
+            // Use setTimeout to ensure DOM is ready
+            setTimeout(() => {
+              try {
+                recaptchaWidgetId = grecaptcha.render(container, {
+                  'sitekey': siteKey,
+                  'theme': 'light',
+                  'callback': function(response) {
+                    console.log('✓ reCAPTCHA verified successfully');
+                    console.log('Response token length:', response.length);
+                  },
+                  'expired-callback': function() {
+                    console.warn('⚠ reCAPTCHA expired, please verify again');
+                  },
+                  'error-callback': function() {
+                    console.error('✗ reCAPTCHA error occurred');
+                  }
+                });
+                console.log('✓ reCAPTCHA initialized successfully with widget ID:', recaptchaWidgetId);
+                isInitializing = false;
+              } catch (renderError) {
+                console.error('✗ Error during grecaptcha.render:', renderError);
+                isInitializing = false;
+                throw renderError;
+              }
+            }, 100);
+            
+            return true;
+          } catch (error) {
+            console.error('✗ reCAPTCHA initialization error:', error.message);
+            console.error('Stack trace:', error.stack);
+            isInitializing = false;
+            return false;
+          }
+        }
+
+        // Expose init function for onload callback
+        window.initRecaptchaNow = initRecaptcha;
+
+        // Polling mechanism to wait for grecaptcha.render
+        let pollCount = 0;
+        const maxPolls = 20; // 10 seconds total (500ms * 20)
+        let pollStarted = false; // Ensure polling only starts once
+        
+        function waitForRecaptchaRender() {
+          if (pollStarted) {
+            return; // Prevent multiple polling loops
+          }
+          pollStarted = true;
+          
+          function poll() {
+            pollCount++;
+            
+            // If already initialized, stop polling
+            if (recaptchaWidgetId !== null) {
+              console.log('✓ Polling stopped - reCAPTCHA already initialized');
+              return;
+            }
+            
+            if (typeof grecaptcha === 'undefined') {
+              console.log(`Poll ${pollCount}/${maxPolls}: grecaptcha not loaded yet...`);
+              if (pollCount < maxPolls) {
+                setTimeout(poll, 500);
+              } else {
+                console.error('✗ Polling timed out waiting for grecaptcha');
+              }
+              return;
+            }
+            
+            if (typeof grecaptcha.render !== 'function') {
+              console.log(`Poll ${pollCount}/${maxPolls}: grecaptcha.render not available yet...`);
+              console.log('   Available methods:', Object.keys(grecaptcha));
+              if (pollCount < maxPolls) {
+                setTimeout(poll, 500);
+              } else {
+                console.error('✗ Polling timed out waiting for grecaptcha.render');
+              }
+              return;
+            }
+            
+            console.log(`✓ grecaptcha.render is ready after ${pollCount} polls`);
+            initRecaptcha();
+          }
+          
+          // Start polling
+          poll();
+        }
+        
+        // Start polling immediately
+        waitForRecaptchaRender();
+
+        // Try to initialize on DOMContentLoaded (but polling should handle it)
+        setTimeout(function() {
+          console.log('DOMContentLoaded timeout check...');
+          console.log('grecaptcha available:', typeof grecaptcha !== 'undefined');
+          console.log('Already initialized:', recaptchaWidgetId !== null);
+          if (recaptchaWidgetId === null && !isInitializing) {
+            console.log('Attempting manual initialization...');
+            initRecaptcha();
+          }
+        }, 1000);
+        
+        // Retry on window load
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            console.log('Window load check...');
+            if (recaptchaWidgetId === null && !isInitializing) {
+              console.log('Retrying reCAPTCHA initialization after page load...');
+              initRecaptcha();
+            }
+          }, 500);
+        });
+        
+        // Final retry attempt
+        setTimeout(function() {
+          if (recaptchaWidgetId === null && !isInitializing) {
+            console.warn('⚠ Final retry: Attempting to initialize reCAPTCHA...');
+            
+            // Try to manually inject the script if it didn't load
+            if (typeof grecaptcha === 'undefined') {
+              console.log('Attempting manual script injection...');
+              const script = document.createElement('script');
+              script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+              script.onload = function() {
+                console.log('✓ Manual script injection successful');
+                setTimeout(initRecaptcha, 200);
+              };
+              script.onerror = function() {
+                console.error('✗ Manual script injection failed');
+              };
+              document.head.appendChild(script);
+            } else {
+              initRecaptcha();
+            }
+            
+            // If still not loaded after final retry, show error message and reload button
+            setTimeout(function() {
+              if (recaptchaWidgetId === null) {
+                const container = document.getElementById('g-recaptcha-container');
+                const reloadBtn = document.getElementById('reload-recaptcha');
+                if (container) {
+                  container.innerHTML = `
+                    <div class="recaptcha-error">
+                      <strong>⚠ reCAPTCHA failed to load</strong><br><br>
+                      Possible causes:<br>
+                      • Internet connection issue<br>
+                      • Ad blocker or firewall blocking Google services<br>
+                      • Site key not registered for this domain<br><br>
+                      <small>Check browser console (F12) for details</small>
+                    </div>`;
+                }
+                if (reloadBtn) {
+                  reloadBtn.style.display = 'block';
+                }
+                console.error('✗ reCAPTCHA failed to load after all retry attempts');
+                console.error('Please check:');
+                console.error('1. Is your internet connection working?');
+                console.error('2. Are you using an ad blocker? Try disabling it.');
+                console.error('3. Is the site key registered for your domain in Google reCAPTCHA admin?');
+                console.error('4. Check Network tab for blocked requests to google.com');
+              }
+            }, 2000);
+          }
+        }, 5000);
+
+        // Reload reCAPTCHA button handler
+        const reloadRecaptchaBtn = document.getElementById('reload-recaptcha');
+        if (reloadRecaptchaBtn) {
+          reloadRecaptchaBtn.addEventListener('click', function() {
+            console.log('Reloading reCAPTCHA...');
+            const container = document.getElementById('g-recaptcha-container');
+            if (container) {
+              // Reset all state
+              container.innerHTML = '';
+              recaptchaWidgetId = null;
+              isInitializing = false;
+              pollCount = 0;
+              pollStarted = false;
+              reloadRecaptchaBtn.style.display = 'none';
+              
+              // Restart polling
+              console.log('Restarting reCAPTCHA initialization...');
+              setTimeout(waitForRecaptchaRender, 100);
+            }
+          });
+        }
 
         (function preventAutofillAndClear() {
           const loginForm = document.getElementById("form-login");
@@ -129,29 +434,213 @@
           });
         }
 
-        /* ========== SIGNUP ========== */
+        /* ========== SIGNUP WITH OTP ========== */
         const signupForm = document.getElementById("form-signup");
         const signUpBtn  = document.getElementById("signUp");
+        const sendOtpBtn = document.getElementById("send-otp-btn");
+        const verifyOtpBtn = document.getElementById("verify-otp-btn");
+        const resendOtpBtn = document.getElementById("resend-otp-btn");
+        const otpSection = document.getElementById("otp-section");
+        const sendOtpSection = document.getElementById("send-otp-section");
+        const otpInput = document.getElementById("otp-input");
+        const otpStatus = document.getElementById("otp-status");
+        const emailInput = document.getElementById("email");
 
+        let isEmailVerified = false;
+        let currentEmail = "";
+
+        // Send OTP button handler
+        if (sendOtpBtn) {
+          sendOtpBtn.addEventListener("click", async function() {
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+              alert("Please enter your email address first.");
+              return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              alert("Please enter a valid email address.");
+              return;
+            }
+
+            currentEmail = email;
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.textContent = "Sending...";
+
+            try {
+              const params = new URLSearchParams();
+              params.append("email", email);
+
+              const response = await fetch("/signup/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                alert(data.detail || "Failed to send OTP");
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.textContent = "Send OTP to Email";
+                return;
+              }
+
+              // Show OTP input section
+              sendOtpSection.style.display = "none";
+              otpSection.style.display = "block";
+              otpStatus.textContent = "OTP sent to " + email;
+              otpStatus.style.color = "#4caf50";
+              sendOtpBtn.textContent = "OTP Sent";
+              
+            } catch (err) {
+              alert("Network error: " + err.message);
+              sendOtpBtn.disabled = false;
+              sendOtpBtn.textContent = "Send OTP to Email";
+            }
+          });
+        }
+
+        // Verify OTP button handler
+        if (verifyOtpBtn) {
+          verifyOtpBtn.addEventListener("click", async function() {
+            const otp = otpInput.value.trim();
+            
+            if (!otp || otp.length !== 6) {
+              alert("Please enter a valid 6-digit OTP.");
+              return;
+            }
+
+            verifyOtpBtn.disabled = true;
+            verifyOtpBtn.textContent = "Verifying...";
+
+            try {
+              const params = new URLSearchParams();
+              params.append("email", currentEmail);
+              params.append("otp", otp);
+
+              const response = await fetch("/signup/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                alert(data.detail || "Invalid OTP");
+                otpStatus.textContent = "Verification failed";
+                otpStatus.style.color = "#f44336";
+                verifyOtpBtn.disabled = false;
+                verifyOtpBtn.textContent = "Verify OTP";
+                return;
+              }
+
+              // OTP verified successfully
+              isEmailVerified = true;
+              otpSection.style.display = "none";
+              otpStatus.textContent = "Email verified successfully!";
+              otpStatus.style.color = "#4caf50";
+              signUpBtn.disabled = false;
+              alert("Email verified successfully! You can now complete your signup.");
+              
+            } catch (err) {
+              alert("Network error: " + err.message);
+              otpStatus.textContent = "Verification failed";
+              otpStatus.style.color = "#f44336";
+              verifyOtpBtn.disabled = false;
+              verifyOtpBtn.textContent = "Verify OTP";
+            }
+          });
+        }
+
+        // Resend OTP button handler
+        if (resendOtpBtn) {
+          resendOtpBtn.addEventListener("click", async function() {
+            if (!currentEmail) {
+              alert("Please enter your email first.");
+              return;
+            }
+
+            resendOtpBtn.disabled = true;
+            resendOtpBtn.textContent = "Resending...";
+
+            try {
+              const params = new URLSearchParams();
+              params.append("email", currentEmail);
+
+              const response = await fetch("/signup/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                alert(data.detail || "Failed to resend OTP");
+                resendOtpBtn.disabled = false;
+                resendOtpBtn.textContent = "Resend OTP";
+                return;
+              }
+
+              otpStatus.textContent = "New OTP sent to " + currentEmail;
+              otpStatus.style.color = "#4caf50";
+              resendOtpBtn.textContent = "Resend OTP";
+              resendOtpBtn.disabled = false;
+              otpInput.value = "";
+              
+            } catch (err) {
+              alert("Network error: " + err.message);
+              resendOtpBtn.disabled = false;
+              resendOtpBtn.textContent = "Resend OTP";
+            }
+          });
+        }
+
+        // Signup button handler (after OTP verification)
         if (signupForm && signUpBtn) {
           signUpBtn.addEventListener("click", async function (e) {
             e.preventDefault();
 
-            const email    = document.getElementById("email").value.trim();
-            const username = document.getElementById("username-signup").value.trim();
+            if (!isEmailVerified) {
+              alert("Please verify your email with OTP first.");
+              return;
+            }
+
+            const firstName = document.getElementById("firstname-signup").value.trim();
+            const lastName = document.getElementById("lastname-signup").value.trim();
             const password = document.getElementById("password-signup").value;
             const confirm  = document.getElementById("confirm-password").value;
-
-            if (!email || !username || !password || !confirm) {
+          
+            if (!firstName || !lastName || !password || !confirm) {
               alert("Please fill all the signup fields.");
               return;
             }
 
+            // Get reCAPTCHA response
+            if (typeof grecaptcha === 'undefined') {
+              alert("reCAPTCHA is not loaded. Please refresh the page and try again.");
+              return;
+            }
+            
+            const recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
+            if (!recaptchaResponse) {
+              alert("Please complete the reCAPTCHA verification.");
+              return;
+            }
+
             const params = new URLSearchParams();
-            params.append("email", email);
-            params.append("username", username);
+            params.append("first_name", firstName);
+            params.append("last_name", lastName);
+            params.append("email", currentEmail);
             params.append("password", password);
             params.append("confirm_password", confirm);
+            params.append("g-recaptcha-response", recaptchaResponse);
+            params.append("otp_verified", "true");
 
             try {
               const response = await fetch("/signup", {
@@ -171,6 +660,20 @@
 
               alert("Your account has been created");
               signupForm.reset();
+              if (recaptchaWidgetId !== null) {
+                grecaptcha.reset(recaptchaWidgetId);
+              }
+              
+              // Reset OTP verification state
+              isEmailVerified = false;
+              currentEmail = "";
+              otpSection.style.display = "none";
+              sendOtpSection.style.display = "block";
+              sendOtpBtn.disabled = false;
+              sendOtpBtn.textContent = "Send OTP to Email";
+              signUpBtn.disabled = true;
+              otpStatus.textContent = "";
+              
             } catch (err) {
               alert("Network error: " + err.message);
             }
@@ -411,7 +914,7 @@
       .right { width:50%; height:100%; overflow:scroll; background:#f9f9f9; right:0; position:absolute; }
       .right label { color:#212121; }
       .right input { border-bottom:1px solid #212121; }
-      .right input:focus { border-color:#673AB7; }
+      .right input:focus { border-color:#3e2c5c; }
 
       .content { display:flex; flex-direction:column; justify-content:center;
         min-height:100%; width:80%; margin:0 auto; position:relative; }
@@ -419,13 +922,47 @@
 
         
       .content h2 { font-weight:300; font-size:2.6em; margin:0.2em 0 0.1em; }
-      .left .content h2 { color:#03A9F4; }
+      .left .content h2 { color:#252575; }
       .right .content h2 { color:#673AB7; }
 
       .form-element { margin:1.6em 0; }
       .form-stack { display:flex; flex-direction:column; }
 
       .link-btn { background:none; border:none; color:#673AB7; font-size:0.8em; cursor:pointer; }
+      .link-btn:hover { text-decoration: underline; }
+      .link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+      /* OTP Input styling */
+      #otp-input {
+        letter-spacing: 8px;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      #otp-status {
+        min-height: 20px;
+        font-weight: 500;
+      }
+
+      /* reCAPTCHA container styling */
+      #g-recaptcha-container {
+        margin: 1.6em 0;
+        display: flex;
+        justify-content: center;
+        min-height: 78px;
+      }
+      
+      /* Show a message if reCAPTCHA fails to load */
+      .recaptcha-error {
+        color: #f44336;
+        font-size: 0.85em;
+        text-align: center;
+        padding: 10px;
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: 5px;
+        margin: 10px 0;
+      }
 
       .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none;
         justify-content:center; align-items:center; z-index:9999; }
@@ -434,8 +971,8 @@
       .modal { background:#fff; padding:20px; border-radius:14px; width:90%; max-width:420px;
         box-shadow:0 10px 40px rgba(0,0,0,0.25); }
 
-      button { padding:0.8em 1.2em; text-transform:uppercase; border:0; cursor:pointer; }
-      button.signup { background:#03A9F4; color:#fff; }
+      button { padding:0.9em 1.9em; text-transform:uppercase; border:0; cursor:pointer; }
+      button.signup { background:#164158; color:#f0e7e7; }
       button.login { background:#673AB7; color:#fff; }
 
       button {
@@ -517,38 +1054,38 @@
       }
 
       .backRight {
-        background: linear-gradient(135deg, #00eaff, #0077b6);
+        background: linear-gradient(135deg, #001a33, #00334d);
       }
       .backLeft {
         background: linear-gradient(135deg, #571676, #722895);
       }
       .left {
-        background: linear-gradient(135deg, #001a33, #00334d);
+        background: linear-gradient(135deg, #f6f4f6, #fcfbfc);
       }
       .right {
         background: linear-gradient(135deg, #f6f4f6, #fcfbfc);
       }
       .left label {
-        color: #00eaff;
+        color: #070909;
       }
       .left input {
-        border-bottom: 1px solid #00eaff;
-        color: #00eaff;
+        border-bottom: 1px solid #0e1012;
+        color: #010f0f;
       }
       .left input:focus {
-        border-color: #00aaff;
-        color: #00aaff;
+        border-color: #020a0f;
+        color: #02090c;
       }
       .right label {
-        color: #9743be;
+        color: #120318;
       }
       .right input {
-        border-bottom: 1px solid#9743be;
-        color: #9743be;
+        border-bottom: 1px solid#040006;
+        color: #0c0110;
       }
       .right input:focus {
-        border-color: #9743be;
-        color: #9743be;
+        border-color: #15061c;
+        color: #050007;
       }
 
 
@@ -570,14 +1107,37 @@
           <div class="content">
             <h2>Sign Up</h2>
             <form id="form-signup" method="post" onsubmit="return false;">
+              <!-- Username Section with First Name and Last Name -->
+              <div class="form-element form-stack">
+                <label>Username</label>
+                <div style="display: flex; gap: 15px; margin-top: 8px;">
+                  <div style="flex: 1;">
+                    <input id="firstname-signup" type="text" placeholder="First Name" style="width: 100%; box-sizing: border-box;">
+                  </div>
+                  <div style="flex: 1;">
+                    <input id="lastname-signup" type="text" placeholder="Last Name" style="width: 100%; box-sizing: border-box;">
+                  </div>
+                </div>
+              </div>
+              
               <div class="form-element form-stack">
                 <label>Email</label>
                 <input id="email" type="email">
               </div>
-              <div class="form-element form-stack">
-                <label>Username</label>
-                <input id="username-signup" type="text">
+              
+              <!-- OTP Verification Section -->
+              <div class="form-element form-stack" id="otp-section" style="display: none;">
+                <label>Enter OTP</label>
+                <input id="otp-input" type="text" maxlength="6" placeholder="Enter 6-digit OTP">
+                <button id="verify-otp-btn" class="signup" type="button" style="margin-top: 10px; width: 100%;">Verify OTP</button>
+                <button id="resend-otp-btn" type="button" class="link-btn" style="margin-top: 5px;">Resend OTP</button>
+                <p id="otp-status" style="font-size: 0.85rem; margin-top: 5px;"></p>
               </div>
+              
+              <div class="form-element form-stack" id="send-otp-section">
+                <button id="send-otp-btn" class="signup" type="button" style="width: 100%;">Send OTP to Email</button>
+              </div>
+              
               <div class="form-element form-stack">
                 <label>Password</label>
                 <input id="password-signup" type="password">
@@ -587,10 +1147,12 @@
                 <input id="confirm-password" type="password">
               </div>
 
-              <div class="g-recaptcha" data-sitekey="6LcukiIrAAAAALhQRLiTzQemejjguv-_4xtZPfZH"></div>
+              <!-- reCAPTCHA Container -->
+              <div id="g-recaptcha-container" class="g-recaptcha" data-sitekey="6Lch9agsAAAAALm_jjlLL602Pi-4McTfuI4MFhmd"></div>
+              <button id="reload-recaptcha" type="button" class="link-btn" style="display:none; margin-top: 5px;">Reload reCAPTCHA</button>
 
               <div class="form-element form-submit">
-                <button id="signUp" class="signup" type="button">Sign up</button>
+                <button id="signUp" class="signup" type="button" disabled>Sign up</button>
                 <button id="goLeft" class="signup off" type="button">Log In</button>
               </div>
             </form>
@@ -603,8 +1165,8 @@
             <h2>Login</h2>
             <form id="form-login" onsubmit="return false;">
               <div class="form-element form-stack">
-                <label>Username</label>
-                <input id="username-login" type="text">
+                <label>Username or Email</label>
+                <input id="username-login" type="text" placeholder="Enter username or email">
               </div>
 
               <div class="form-element form-stack">
@@ -618,7 +1180,7 @@
                 <button id="goRight" class="login off" type="button">Sign Up</button>
               </div>
 
-              <p style="margin-top:20px; font-size:0.85rem; color:#00334d;">OR LOGIN WITH</p>
+              <p style="margin-top:20px; font-size:0.99rem; color:#051f2c;">OR LOGIN WITH</p>
 
               <div
                 id="g_id_onload"

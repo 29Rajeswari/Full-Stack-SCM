@@ -273,69 +273,185 @@
         Welcome to SCMXpertLite
       </h2>
 
-      <div style="display:flex; justify-content:center; gap:60px; margin-top:60px; flex-wrap:wrap;">
+      <!-- ============ ADMIN DASHBOARD CARDS ============ -->
+      <div id="admin-dashboard" style="display:none;">
+        <div style="display:flex; justify-content:center; gap:40px; margin-top:50px; flex-wrap:wrap; padding:0 20px;">
 
-        <!-- CREATE SHIPMENT CARD -->
-        <div style="
-          width:360px;
-          background:rgba(15,20,50,0.85);
-          padding:40px;
-          border-radius:20px;
-          box-shadow:0 18px 40px rgba(0,0,0,0.6);
-          backdrop-filter:blur(12px);
-          border:1px solid rgba(127,93,255,0.4);
-        ">
-          <h3 style="font-size:24px; color:#f5e7ff; font-weight:400; margin-bottom:25px;">
-            Create a New Shipment
-          </h3>
+          <!-- MANAGE SHIPMENTS CARD -->
+          <div style="
+            width:320px;
+            background:rgba(15,20,50,0.85);
+            padding:35px;
+            border-radius:20px;
+            box-shadow:0 18px 40px rgba(0,0,0,0.6);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(127,93,255,0.4);
+          ">
+            <div style="font-size:40px; margin-bottom:15px;">📦</div>
+            <h3 style="font-size:22px; color:#f5e7ff; font-weight:500; margin-bottom:12px;">
+              Manage Shipments
+            </h3>
+            <p style="color:#c9b8ff; font-size:14px; margin-bottom:20px; line-height:1.5;">
+              View, edit and track all shipments. Manage delivery information.
+            </p>
+            <a href="/frontend/shipments.html"
+               style="
+                 display:inline-block;
+                 padding:12px 28px;
+                 background:linear-gradient(90deg,#8f5cff,#f67ac6);
+                 color:#0f0d1f;
+                 font-size:14px;
+                 border-radius:30px;
+                 text-decoration:none;
+                 font-weight:600;
+                 box-shadow:0 6px 16px rgba(104, 6, 129, 0.7);
+               ">
+              VIEW SHIPMENTS
+            </a>
+          </div>
 
-          <a href="/frontend/createshipments.html"
-             style="
-               display:inline-block;
-               padding:14px 30px;
-               background:linear-gradient(90deg,#8f5cff,#f67ac6);
-               color:#0f0d1f;
-               font-size:16px;
-               border-radius:30px;
-               text-decoration:none;
-               font-weight:600;
-               box-shadow:0 6px 16px rgba(104, 6, 129, 0.7);
-             ">
-            CREATE SHIPMENT
-          </a>
+          <!-- USER MANAGEMENT CARD -->
+          <div style="
+            width:320px;
+            background:rgba(15,20,50,0.85);
+            padding:35px;
+            border-radius:20px;
+            box-shadow:0 18px 40px rgba(0,0,0,0.6);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(127,93,255,0.4);
+          ">
+            <div style="font-size:40px; margin-bottom:15px;">👥</div>
+            <h3 style="font-size:22px; color:#f5e7ff; font-weight:500; margin-bottom:12px;">
+              User Management
+            </h3>
+            <p style="color:#c9b8ff; font-size:14px; margin-bottom:20px; line-height:1.5;">
+              View and manage all users. Assign roles, permissions and accounts.
+            </p>
+            <a href="/frontend/manage_users.html"
+               style="
+                 display:inline-block;
+                 padding:12px 28px;
+                 background:linear-gradient(90deg,#5caaff,#67f6c6);
+                 color:#0f0d1f;
+                 font-size:14px;
+                 border-radius:30px;
+                 text-decoration:none;
+                 font-weight:600;
+                 box-shadow:0 6px 16px rgba(6, 104, 129, 0.7);
+               ">
+              MANAGE USERS
+            </a>
+          </div>
+
+          <!-- DEVICE DATA CARD -->
+          <div style="
+            width:320px;
+            background:rgba(15,20,50,0.85);
+            padding:35px;
+            border-radius:20px;
+            box-shadow:0 18px 40px rgba(0,0,0,0.6);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(127,93,255,0.4);
+          ">
+            <div style="font-size:40px; margin-bottom:15px;">📡</div>
+            <h3 style="font-size:22px; color:#f5e7ff; font-weight:500; margin-bottom:12px;">
+              Device Data
+            </h3>
+            <p style="color:#c9b8ff; font-size:14px; margin-bottom:20px; line-height:1.5;">
+              Live streaming of sensor data from all connected devices.
+            </p>
+            <a href="/frontend/live_streaming.html"
+               style="
+                 display:inline-block;
+                 padding:12px 28px;
+                 background:linear-gradient(90deg,#ff5c8f,#f6c667);
+                 color:#0f0d1f;
+                 font-size:14px;
+                 border-radius:30px;
+                 text-decoration:none;
+                 font-weight:600;
+                 box-shadow:0 6px 16px rgba(129, 6, 104, 0.7);
+               ">
+              LIVE STREAMING
+            </a>
+          </div>
+
         </div>
-
-        <!-- DEVICE DATA CARD -->
-        <div style="
-          width:360px;
-          background:rgba(15,20,50,0.85);
-          padding:40px;
-          border-radius:20px;
-          box-shadow:0 18px 40px rgba(0,0,0,0.6);
-          backdrop-filter:blur(12px);
-          border:1px solid rgba(127,93,255,0.4);
-        ">
-          <h3 style="font-size:24px; color:#f5e7ff; font-weight:400; margin-bottom:25px;">
-            View Device Data Stream
-          </h3>
-
-          <a href='/frontend/live_streaming.html'
-             style="
-               display:inline-block;
-               padding:14px 30px;
-               background:linear-gradient(90deg,#8f5cff,#f67ac6);
-               color:#0f0d1f;
-               font-size:16px;
-               border-radius:30px;
-               text-decoration:none;
-               font-weight:600;
-               box-shadow:0 6px 16px rgba(104, 6, 129, 0.7);
-             ">
-            DEVICE DATA STREAM
-          </a>
-        </div>
-
       </div>
+
+      <!-- ============ USER DASHBOARD CARDS ============ -->
+      <div id="user-dashboard" style="display:none;">
+        <div style="display:flex; justify-content:center; gap:60px; margin-top:60px; flex-wrap:wrap; padding:0 20px;">
+
+          <!-- CREATE SHIPMENT CARD -->
+          <div style="
+            width:360px;
+            background:rgba(15,20,50,0.85);
+            padding:40px;
+            border-radius:20px;
+            box-shadow:0 18px 40px rgba(0,0,0,0.6);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(127,93,255,0.4);
+          ">
+            <div style="font-size:45px; margin-bottom:20px;">📦</div>
+            <h3 style="font-size:24px; color:#f5e7ff; font-weight:400; margin-bottom:15px;">
+              Create New Shipment
+            </h3>
+            <p style="color:#c9b8ff; font-size:14px; margin-bottom:25px; line-height:1.5;">
+              Start a new shipment with device tracking and delivery details.
+            </p>
+            <a href="/frontend/createshipments.html"
+               style="
+                 display:inline-block;
+                 padding:14px 30px;
+                 background:linear-gradient(90deg,#8f5cff,#f67ac6);
+                 color:#0f0d1f;
+                 font-size:16px;
+                 border-radius:30px;
+                 text-decoration:none;
+                 font-weight:600;
+                 box-shadow:0 6px 16px rgba(104, 6, 129, 0.7);
+               ">
+              CREATE SHIPMENT
+            </a>
+          </div>
+
+          <!-- ACCOUNT SETTINGS CARD -->
+          <div style="
+            width:360px;
+            background:rgba(15,20,50,0.85);
+            padding:40px;
+            border-radius:20px;
+            box-shadow:0 18px 40px rgba(0,0,0,0.6);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(127,93,255,0.4);
+          ">
+            <div style="font-size:45px; margin-bottom:20px;">⚙️</div>
+            <h3 style="font-size:24px; color:#f5e7ff; font-weight:400; margin-bottom:15px;">
+              Account Settings
+            </h3>
+            <p style="color:#c9b8ff; font-size:14px; margin-bottom:25px; line-height:1.5;">
+              View and manage your account information, preferences and settings.
+            </p>
+            <a href="/frontend/account.html"
+               style="
+                 display:inline-block;
+                 padding:14px 30px;
+                 background:linear-gradient(90deg,#5caaff,#67f6c6);
+                 color:#0f0d1f;
+                 font-size:16px;
+                 border-radius:30px;
+                 text-decoration:none;
+                 font-weight:600;
+                 box-shadow:0 6px 16px rgba(6, 104, 129, 0.7);
+               ">
+              MY ACCOUNT
+            </a>
+          </div>
+
+        </div>
+      </div>
+
     </div>
     <!-- END: Greeting + Cards -->
 
@@ -350,7 +466,7 @@
     </script>
 
     <script>
-      // Check authentication on page load
+      // Check authentication on page load and show role-based dashboard
       window.addEventListener("load", function() {
         const token = localStorage.getItem("access_token");
         if (!token) {
@@ -361,14 +477,22 @@
           const userRole = localStorage.getItem("user_role") || "user";
           const username = localStorage.getItem("username") || "";
           const roleDisplay = document.getElementById("user-role-display");
+          const adminDashboard = document.getElementById("admin-dashboard");
+          const userDashboard = document.getElementById("user-dashboard");
           
           if (roleDisplay) {
             if (userRole === "admin") {
               roleDisplay.textContent = "Admin";
               roleDisplay.style.color = "#ffb347"; // Orange color for admin
+              // Show admin dashboard, hide user dashboard
+              if (adminDashboard) adminDashboard.style.display = "block";
+              if (userDashboard) userDashboard.style.display = "none";
             } else {
               roleDisplay.textContent = username || "User";
               roleDisplay.style.color = "#ffb5ff"; // Pink color for user
+              // Show user dashboard, hide admin dashboard
+              if (adminDashboard) adminDashboard.style.display = "none";
+              if (userDashboard) userDashboard.style.display = "block";
             }
           }
         }

@@ -82,6 +82,47 @@ except Exception:
 # Store OTP temporarily (in-memory)
 otp_store = {}
 
+def generate_otp() -> str:
+    """Generate a 6-digit OTP"""
+    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+def send_signup_otp_email(to_email: str, otp: str):
+    """Send OTP email for signup verification"""
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_pass = os.getenv("SMTP_PASS")
+    from_email = os.getenv("FROM_EMAIL", smtp_user)
+
+    if not (smtp_host and smtp_user and smtp_pass):
+        logger.error("SMTP not configured properly. OTP for %s is %s", to_email, otp)
+        raise RuntimeError("SMTP not configured")
+
+    msg = EmailMessage()
+    msg["Subject"] = "Your Signup Verification OTP"
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg.set_content(
+        f"""\
+Dear user,
+
+Your 6-digit OTP for account verification is: {otp}
+
+This OTP is valid for 10 minutes.
+If you did not request this, you can ignore this email.
+
+Thank you.
+"""
+    )
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls(context=context)
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+
+    logger.info("Signup OTP email sent to %s", to_email)
+
 # OAuth2 for Swagger (Authorize button)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
@@ -211,18 +252,83 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 # ---------------------------
-# SIGNUP
+# SEND OTP FOR SIGNUP
+# ---------------------------
+@router.post("/signup/send-otp")
+async def send_signup_otp(email: EmailStr = Form(...)):
+    """Send OTP to email for signup verification"""
+    # Check if email already exists
+    exists = users_collection.find_one({"email": email})
+    if exists:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email already registered")
+    
+    # Generate OTP
+    otp = generate_otp()
+    
+    # Store OTP with timestamp (valid for 10 minutes)
+    otp_store[email] = {
+        "otp": otp,
+        "timestamp": datetime.utcnow(),
+        "expires_in": 600  # 10 minutes in seconds
+    }
+    
+    try:
+        send_signup_otp_email(email, otp)
+        return {"message": "OTP sent successfully", "email": email}
+    except Exception as e:
+        logger.error(f"Failed to send OTP: {e}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to send OTP email")
+
+
+# ---------------------------
+# VERIFY OTP FOR SIGNUP
+# ---------------------------
+@router.post("/signup/verify-otp")
+async def verify_signup_otp(email: EmailStr = Form(...), otp: str = Form(...)):
+    """Verify OTP during signup"""
+    if email not in otp_store:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "OTP not found or expired. Please request a new OTP")
+    
+    stored_data = otp_store[email]
+    stored_otp = stored_data["otp"]
+    timestamp = stored_data["timestamp"]
+    expires_in = stored_data["expires_in"]
+    
+    # Check if OTP has expired
+    elapsed = (datetime.utcnow() - timestamp).total_seconds()
+    if elapsed > expires_in:
+        del otp_store[email]
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "OTP has expired. Please request a new OTP")
+    
+    # Verify OTP
+    if otp != stored_otp:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid OTP")
+    
+    # OTP verified successfully - remove from store
+    del otp_store[email]
+    
+    return {"message": "OTP verified successfully", "email": email, "verified": True}
+
+
+# ---------------------------
+# SIGNUP (with OTP verification)
 # ---------------------------
 @router.post("/signup")
 async def signup(
     request: Request,
-    username: str = Form(...),
+    first_name: str = Form(...),
+    last_name: str = Form(...),
     email: EmailStr = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
+    otp_verified: str = Form(...),  # Must be "true" if OTP was verified
 ):
     form = await request.form()
     recaptcha = form.get("g-recaptcha-response")
+
+    # Verify OTP was completed
+    if otp_verified.lower() != "true":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email verification required. Please verify your email with OTP first")
 
     # Optional reCAPTCHA validation
     if recaptcha:
@@ -238,15 +344,26 @@ async def signup(
             "Weak password — must include uppercase, lowercase, numbers, special chars",
         )
 
+    # Generate username from first and last name
+    username = f"{first_name.lower()}.{last_name.lower()}".replace(" ", "_")
+    
+    # Check if username or email already exists
     exists = users_collection.find_one(
         {"$or": [{"email": email}, {"username": username}]}
     )
     if exists:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email or Username already exists")
+        # If username exists, add a random number to make it unique
+        import random
+        username = f"{username}{random.randint(100, 999)}"
+        exists = users_collection.find_one({"username": username})
+        if exists:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email already registered")
 
     users_collection.insert_one(
         {
             "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
             "email": email,
             "password": hash_password(password),
             "role": "user",
@@ -255,7 +372,7 @@ async def signup(
         }
     )
 
-    return {"message": "Signup successful"}
+    return {"message": "Signup successful", "username": username}
 
 
 # ---------------------------
@@ -797,3 +914,62 @@ async def reject_admin_request(username: str, reason: str = Form(None), user=Dep
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Pending request not found")
     admin_requests.update_one({"_id": req["_id"]}, {"$set": {"status": "rejected", "reason": reason, "processed_at": datetime.utcnow()}})
     return {"message": f"{username} admin request rejected"}
+
+
+# ---------------------------
+# USER MANAGEMENT API (for manage_users.html)
+# ---------------------------
+@router.get("/api/users")
+async def get_all_users(user=Depends(get_current_user)):
+    """Get all users - Admin only endpoint"""
+    if not _is_admin(user):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin privileges required")
+    
+    users = list(users_collection.find({}, {"password": 0}))  # Exclude password field
+    
+    # Convert ObjectId to string and format dates
+    formatted_users = []
+    for u in users:
+        u["_id"] = str(u["_id"])
+        if "created_at" in u and isinstance(u["created_at"], datetime):
+            u["created_at"] = u["created_at"].isoformat()
+        formatted_users.append(u)
+    
+    return formatted_users
+
+
+@router.put("/api/users/{username}/role")
+async def update_user_role(username: str, request: Request, user=Depends(get_current_user)):
+    """Update user role - Admin only endpoint"""
+    if not _is_admin(user):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin privileges required")
+    
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid JSON body")
+    
+    new_role = data.get("role", "").strip().lower()
+    
+    if new_role not in ["user", "admin"]:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Role must be 'user' or 'admin'")
+    
+    # Check if user exists
+    target_user = users_collection.find_one({"username": username})
+    if not target_user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    
+    # Update role
+    result = users_collection.update_one(
+        {"username": username},
+        {"$set": {"role": new_role}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Failed to update user role")
+    
+    return {
+        "message": f"User role updated to {new_role}",
+        "username": username,
+        "role": new_role
+    }

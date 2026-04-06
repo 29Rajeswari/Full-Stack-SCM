@@ -42,7 +42,7 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 10px 0;
+            padding: 100px 0 20px 0;
             background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
                         radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
                         #000814 !important;
@@ -65,10 +65,19 @@
 
         /* ========= TOPBAR / NAV ========= */
         .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px !important;
+            padding: 15px 40px;
+            background: rgba(9, 13, 32, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(143, 148, 251, 0.3);
+            z-index: 1000;
+            margin-bottom: 0 !important;
         }
 
         .brand {
@@ -249,7 +258,7 @@
         }
 
         thead {
-            background: linear-gradient(135deg, #a471ff, #7f5dff);
+            background: linear-gradient(135deg, #6b4dff, #a471ff);
         }
 
         th {
@@ -259,6 +268,7 @@
             color: #f8f3ff;
             text-transform: uppercase;
             font-size: 0.8rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         tbody tr {
@@ -280,6 +290,13 @@
         td {
             padding: 14px 20px;
             color: #ffffff !important;
+        }
+
+        /* First column (Device Id) styling */
+        td:first-child {
+            color: #b987ff !important;
+            font-weight: 600;
+            text-shadow: 0 0 8px rgba(185, 135, 255, 0.4);
         }
 
         .highlight-row {
@@ -318,21 +335,22 @@
 </head>
 
 <body>
+    <!-- Top Navigation Bar -->
+    <header class="topbar">
+        <div class="brand">
+            <img src="/static/logo.jpg" alt="Logo">
+        </div>
+        <nav class="nav-menu">
+            <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+            <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
+            <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+            <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+            <a href="/frontend/live_streaming.html" class="active"><i class="fa fa-microchip"></i> Live Streaming</a>
+            <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+        </nav>
+    </header>
+
     <div class="dashboard-container">
-        <!-- Top Navigation Bar -->
-        <header class="topbar">
-            <div class="brand">
-                <img src="/static/logo.jpg" alt="Logo">
-            </div>
-            <nav class="nav-menu">
-                <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
-                <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
-                <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
-                <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
-                <a href="/frontend/live_streaming.html" class="active"><i class="fa fa-microchip"></i> Live Streaming</a>
-                <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
-            </nav>
-        </header>
 
         <!-- Main Content -->
         <main class="content">

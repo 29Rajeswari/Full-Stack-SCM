@@ -33,7 +33,7 @@
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding: 70px 0 0 0;
+      padding: 100px 0 20px 0;
       background: radial-gradient(circle at top left, #00eaff33, #001a33 40%),
                   radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
                   #000814 !important;
@@ -54,10 +54,19 @@
     }
 
     .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 50px !important;
+      padding: 15px 40px;
+      background: rgba(9, 13, 32, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(143, 148, 251, 0.3);
+      z-index: 1000;
+      margin-bottom: 0 !important;
     }
 
     .brand {
@@ -183,6 +192,68 @@
       font-weight: 500;
     }
 
+    .edit-btn {
+      background: rgba(100, 181, 246, 0.2);
+      color: #64b5f6;
+      border: 1px solid rgba(100, 181, 246, 0.4);
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .edit-btn:hover {
+      background: rgba(100, 181, 246, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .save-btn, .cancel-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .save-btn {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+      border: 1px solid rgba(76, 175, 80, 0.4);
+    }
+
+    .save-btn:hover {
+      background: rgba(76, 175, 80, 0.3);
+    }
+
+    .cancel-btn {
+      background: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+      border: 1px solid rgba(244, 67, 54, 0.4);
+    }
+
+    .cancel-btn:hover {
+      background: rgba(244, 67, 54, 0.3);
+    }
+
+    .edit-input {
+      background: rgba(18, 24, 56, 0.8);
+      border: 1px solid rgba(127, 93, 255, 0.4);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #ffffff;
+      font-size: 16px;
+      width: 200px;
+    }
+
+    .edit-input:focus {
+      outline: none;
+      border-color: #7f5dff;
+      box-shadow: 0 0 8px rgba(127, 93, 255, 0.3);
+    }
+
     .role-badge {
       padding: 8px 20px;
       border-radius: 999px;
@@ -227,22 +298,22 @@
   </style>
 </head>
 <body>
-  <div class="dashboard-container">
-    <!-- Top Navigation -->
-    <header class="topbar">
-      <div class="brand">
-        <img src="/static/logo.jpg" alt="Logo">
-      </div>
-      <nav class="nav-menu">
-        <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
-        <a href="/frontend/account.html" class="active"><i class="fa fa-user-circle"></i> My Account</a>
-        <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
-        <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
-        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
-        <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
-      </nav>
-    </header>
+  <!-- Top Navigation -->
+  <header class="topbar">
+    <div class="brand">
+      <img src="/static/logo.jpg" alt="Logo">
+    </div>
+    <nav class="nav-menu">
+      <a href="/frontend/dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+      <a href="/frontend/account.html" class="active"><i class="fa fa-user-circle"></i> My Account</a>
+      <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
+      <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
+      <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+      <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
+    </nav>
+  </header>
 
+  <div class="dashboard-container">
     <!-- Profile Content -->
     <main class="profile-section">
       <div class="profile-card">
@@ -250,7 +321,13 @@
         <div id="profile-info">
           <div class="info-row">
             <span class="info-label">Username</span>
-            <span id="display-username" class="info-value">-</span>
+            <div style="display: flex; align-items: center;">
+              <span id="display-username" class="info-value">-</span>
+              <button id="edit-username-btn" class="edit-btn"><i class="fa fa-edit"></i></button>
+              <input type="text" id="edit-username-input" class="edit-input" style="display: none;">
+              <button id="save-username-btn" class="save-btn" style="display: none;">Save</button>
+              <button id="cancel-username-btn" class="cancel-btn" style="display: none;">Cancel</button>
+            </div>
           </div>
           <div class="info-row">
             <span class="info-label">Email</span>
@@ -319,7 +396,96 @@
         document.getElementById("error-message").textContent = "Connection error";
         document.getElementById("error-message").style.display = "block";
       }
+
+      // Setup edit functionality
+      setupEditFunctionality();
     });
+
+    function setupEditFunctionality() {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      // Username edit functionality
+      const editUsernameBtn = document.getElementById('edit-username-btn');
+      const saveUsernameBtn = document.getElementById('save-username-btn');
+      const cancelUsernameBtn = document.getElementById('cancel-username-btn');
+      const displayUsername = document.getElementById('display-username');
+      const editUsernameInput = document.getElementById('edit-username-input');
+
+      editUsernameBtn.addEventListener('click', () => {
+        displayUsername.style.display = 'none';
+        editUsernameBtn.style.display = 'none';
+        editUsernameInput.value = displayUsername.textContent;
+        editUsernameInput.style.display = 'inline-block';
+        saveUsernameBtn.style.display = 'inline-block';
+        cancelUsernameBtn.style.display = 'inline-block';
+        editUsernameInput.focus();
+      });
+
+      saveUsernameBtn.addEventListener('click', async () => {
+        const newUsername = editUsernameInput.value.trim();
+        if (!newUsername) {
+          alert('Username cannot be empty');
+          return;
+        }
+
+        try {
+          const response = await fetch('/account/update', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username: newUsername,
+              email: document.getElementById('display-email').textContent
+            })
+          });
+
+          if (response.ok) {
+            displayUsername.textContent = newUsername;
+            showEditMode(false, 'username');
+          } else {
+            const errorData = await response.json();
+            alert(errorData.detail || 'Failed to update username');
+          }
+        } catch (error) {
+          console.error('Error updating username:', error);
+          alert('Connection error while updating username');
+        }
+      });
+
+      cancelUsernameBtn.addEventListener('click', () => {
+        showEditMode(false, 'username');
+      });
+    }
+
+    function showEditMode(show, field) {
+      const displayElement = document.getElementById(`display-${field}`);
+      const editBtn = document.getElementById(`edit-${field}-btn`);
+      const inputElement = document.getElementById(`edit-${field}-input`);
+      const saveBtn = document.getElementById(`save-${field}-btn`);
+      const cancelBtn = document.getElementById(`cancel-${field}-btn`);
+
+      if (show) {
+        displayElement.style.display = 'none';
+        editBtn.style.display = 'none';
+        inputElement.style.display = 'inline-block';
+        saveBtn.style.display = 'inline-block';
+        cancelBtn.style.display = 'inline-block';
+      } else {
+        displayElement.style.display = 'inline';
+        editBtn.style.display = 'inline-block';
+        inputElement.style.display = 'none';
+        saveBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+      }
+    }
+
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
   </script>
 </body>
 </html>
