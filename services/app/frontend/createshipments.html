@@ -130,15 +130,15 @@
     }
 
     .topbar .logout-btn {
-      background: #ff5b5b !important;
+      background: linear-gradient(135deg, #dc3545, #c82333) !important;
       color: #ffffff !important;
-      box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+      box-shadow: 0 10px 24px rgba(220, 53, 69, 0.4) !important;
       padding: 8px 20px !important;
     }
 
     .topbar .logout-btn:hover {
-      background: #ff4242 !important;
-      box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+      background: linear-gradient(135deg, #e04b59, #d42a3a) !important;
+      box-shadow: 0 14px 34px rgba(220, 53, 69, 0.6) !important;
     }
 
     /* Content */
@@ -193,11 +193,12 @@
 
     .form-label {
       margin-bottom: 8px;
-      color: #a9b2ff;
-      font-weight: 600;
-      font-size: 13px;
+      color: #e8eaff;
+      font-weight: 700;
+      font-size: 14px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
     .form-input,
@@ -229,30 +230,42 @@
       min-height: 100px;
     }
 
+    .form-input select {
+      cursor: pointer;
+    }
+
+    .form-input option {
+      background: #0a0e26;
+      color: #ffffff;
+      padding: 10px;
+    }
+
     .submit-btn {
       width: 100%;
       padding: 16px;
       font-size: 16px;
       font-weight: 700;
-      color: white;
-      background: linear-gradient(135deg, #6b4dff, #b06bff);
+      color: #ffffff;
+      background: linear-gradient(135deg, #0099cc 0%, #0066aa 50%, #004488 100%);
       border: none;
       border-radius: 999px;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(107, 77, 255, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 102, 170, 0.3);
       transition: all 0.3s ease;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       margin-top: 20px;
     }
 
     .submit-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 30px rgba(107, 77, 255, 0.6);
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #00aadd 0%, #0077bb 50%, #005599 100%);
+      box-shadow: 0 6px 18px rgba(0, 102, 170, 0.4);
     }
 
     .submit-btn:active {
-      transform: translateY(-1px);
+      transform: translateY(0);
+      box-shadow: 0 3px 10px rgba(0, 102, 170, 0.3);
     }
 
     /* Result Message */
@@ -313,7 +326,8 @@
       <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
       <a href="/frontend/createshipments.html" class="active"><i class="fa fa-plus"></i> Create Shipment</a>
       <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
-      <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+      <a href="/frontend/live_streaming.html" id="nav-live-streaming"><i class="fa fa-microchip"></i> Live Streaming</a>
+      <a href="/frontend/manage_users.html" id="nav-manage-users"><i class="fa fa-users"></i> Manage Users</a>
       <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
     </nav>
   </header>
@@ -362,17 +376,40 @@
 
           <div class="form-group">
             <label class="form-label">Device *</label>
-            <input type="text" class="form-input" name="device" required placeholder="Enter device ID">
+            <select class="form-input" name="device" required>
+              <option value="">Select Device ID</option>
+              <option value="1150">1150</option>
+              <option value="1151">1151</option>
+              <option value="1152">1152</option>
+              <option value="1153">1153</option>
+              <option value="1154">1154</option>
+              <option value="1155">1155</option>
+              <option value="1156">1156</option>
+              <option value="1157">1157</option>
+              <option value="1158">1158</option>
+            </select>
           </div>
 
           <div class="form-group">
             <label class="form-label">Route From *</label>
-            <input type="text" class="form-input" name="route_from" required placeholder="Origin location">
+            <select class="form-input" name="route_from" required>
+              <option value="">Select Origin Location</option>
+              <option value="Newyork,USA">Newyork, USA</option>
+              <option value="Chennai, India">Chennai, India</option>
+              <option value="Bengaluru, India">Bengaluru, India</option>
+              <option value="London,UK">London, UK</option>
+            </select>
           </div>
 
           <div class="form-group">
             <label class="form-label">Route To *</label>
-            <input type="text" class="form-input" name="route_to" required placeholder="Destination location">
+            <select class="form-input" name="route_to" required>
+              <option value="">Select Destination Location</option>
+              <option value="Newyork,USA">Newyork, USA</option>
+              <option value="Chennai, India">Chennai, India</option>
+              <option value="Bengaluru, India">Bengaluru, India</option>
+              <option value="London,UK">London, UK</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -404,6 +441,52 @@
     document.addEventListener("DOMContentLoaded", function () {
       const form = document.getElementById("shipmentForm");
       const resultBox = document.getElementById("resultBox");
+      const routeFromSelect = form.querySelector('select[name="route_from"]');
+      const routeToSelect = form.querySelector('select[name="route_to"]');
+
+      // Dynamic option enabling/disabling for routes
+      function updateRouteOptions() {
+        const routeFromValue = routeFromSelect.value;
+        const routeToValue = routeToSelect.value;
+
+        // Get all options in both dropdowns
+        const fromOptions = routeFromSelect.querySelectorAll('option');
+        const toOptions = routeToSelect.querySelectorAll('option');
+
+        // Reset all options to enabled first
+        fromOptions.forEach(option => {
+          if (option.value !== '') option.disabled = false;
+        });
+        toOptions.forEach(option => {
+          if (option.value !== '') option.disabled = false;
+        });
+
+        // Disable the selected Route From value in Route To dropdown
+        if (routeFromValue) {
+          toOptions.forEach(option => {
+            if (option.value === routeFromValue) {
+              option.disabled = true;
+            }
+          });
+        }
+
+        // Disable the selected Route To value in Route From dropdown
+        if (routeToValue) {
+          fromOptions.forEach(option => {
+            if (option.value === routeToValue) {
+              option.disabled = true;
+            }
+          });
+        }
+
+        // If Route To is currently set to the same as Route From, reset it
+        if (routeFromValue && routeToValue && routeFromValue === routeToValue) {
+          routeToSelect.value = '';
+        }
+      }
+
+      routeFromSelect.addEventListener("change", updateRouteOptions);
+      routeToSelect.addEventListener("change", updateRouteOptions);
 
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -416,11 +499,26 @@
           payload.append(key, value);
         }
 
+        // Get authentication token
+        const token = localStorage.getItem("access_token");
+        
+        // Check if user is authenticated
+        if (!token) {
+          resultBox.style.display = "block";
+          resultBox.className = "result-message result-error";
+          resultBox.textContent = "Please login to create shipments";
+          setTimeout(() => {
+            window.location.href = "/frontend/users.html";
+          }, 2000);
+          return;
+        }
+
         try {
           const response = await fetch("/api/shipments/create", {
             method: "POST",
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
+              "Authorization": `Bearer ${token}`
             },
             body: payload.toString(),
           });
@@ -446,6 +544,23 @@
           resultBox.textContent = "Network error: " + err.message;
         }
       });
+    });
+    
+    // Role-based navigation visibility
+    window.addEventListener('load', function() {
+      const userRole = localStorage.getItem("user_role") || "user";
+      const liveStreamingNav = document.getElementById("nav-live-streaming");
+      const manageUsersNav = document.getElementById("nav-manage-users");
+      
+      if (userRole === "admin") {
+        // Admin: Show all navigation items
+        if (liveStreamingNav) liveStreamingNav.style.display = "flex";
+        if (manageUsersNav) manageUsersNav.style.display = "flex";
+      } else {
+        // Regular user: Hide Live Streaming and Manage Users
+        if (liveStreamingNav) liveStreamingNav.style.display = "none";
+        if (manageUsersNav) manageUsersNav.style.display = "none";
+      }
     });
   </script>
 </body>

@@ -232,15 +232,15 @@
       }
 
       .topbar .logout-btn {
-        background: #ff5b5b !important;
+        background: linear-gradient(135deg, #dc3545, #c82333) !important;
         color: #ffffff !important;
-        box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+        box-shadow: 0 10px 24px rgba(220, 53, 69, 0.4) !important;
         padding: 8px 20px !important;
       }
 
       .topbar .logout-btn:hover {
-        background: #ff4242 !important;
-        box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+        background: linear-gradient(135deg, #e04b59, #d42a3a) !important;
+        box-shadow: 0 14px 34px rgba(220, 53, 69, 0.6) !important;
       }
     </style>
   </head>
@@ -258,7 +258,8 @@
         <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
         <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
         <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
-        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
+        <a href="/frontend/live_streaming.html" id="nav-live-streaming"><i class="fa fa-microchip"></i> Live Streaming</a>
+        <a href="/frontend/manage_users.html" id="nav-manage-users"><i class="fa fa-users"></i> Manage Users</a>
         <a class="logout-btn" href="/frontend/logout.html"><i class="fa fa-sign-out-alt"></i> Log out</a>
       </nav>
     </header>
@@ -479,6 +480,20 @@
           const roleDisplay = document.getElementById("user-role-display");
           const adminDashboard = document.getElementById("admin-dashboard");
           const userDashboard = document.getElementById("user-dashboard");
+          
+          // Role-based navigation visibility
+          const liveStreamingNav = document.getElementById("nav-live-streaming");
+          const manageUsersNav = document.getElementById("nav-manage-users");
+          
+          if (userRole === "admin") {
+            // Admin: Show all navigation items
+            if (liveStreamingNav) liveStreamingNav.style.display = "flex";
+            if (manageUsersNav) manageUsersNav.style.display = "flex";
+          } else {
+            // Regular user: Hide Live Streaming and Manage Users
+            if (liveStreamingNav) liveStreamingNav.style.display = "none";
+            if (manageUsersNav) manageUsersNav.style.display = "none";
+          }
           
           if (roleDisplay) {
             if (userRole === "admin") {

@@ -606,11 +606,6 @@
           signUpBtn.addEventListener("click", async function (e) {
             e.preventDefault();
 
-            if (!isEmailVerified) {
-              alert("Please verify your email with OTP first.");
-              return;
-            }
-
             const firstName = document.getElementById("firstname-signup").value.trim();
             const lastName = document.getElementById("lastname-signup").value.trim();
             const password = document.getElementById("password-signup").value;
@@ -621,16 +616,25 @@
               return;
             }
 
-            // Get reCAPTCHA response
-            if (typeof grecaptcha === 'undefined') {
-              alert("reCAPTCHA is not loaded. Please refresh the page and try again.");
+            // Check if email is provided and verified
+            if (!currentEmail) {
+              alert("Please enter your email and complete OTP verification.");
               return;
             }
-            
-            const recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
-            if (!recaptchaResponse) {
-              alert("Please complete the reCAPTCHA verification.");
+
+            if (!isEmailVerified) {
+              alert("Please verify your email with OTP first.");
               return;
+            }
+
+            // Try to get reCAPTCHA response (optional - won't block if not available)
+            let recaptchaResponse = null;
+            if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
+              try {
+                recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
+              } catch (err) {
+                console.warn('reCAPTCHA not available, proceeding without it:', err);
+              }
             }
 
             const params = new URLSearchParams();
@@ -639,8 +643,12 @@
             params.append("email", currentEmail);
             params.append("password", password);
             params.append("confirm_password", confirm);
-            params.append("g-recaptcha-response", recaptchaResponse);
             params.append("otp_verified", "true");
+            
+            // Add reCAPTCHA response only if available
+            if (recaptchaResponse) {
+              params.append("g-recaptcha-response", recaptchaResponse);
+            }
 
             try {
               const response = await fetch("/signup", {
@@ -660,8 +668,14 @@
 
               alert("Your account has been created");
               signupForm.reset();
-              if (recaptchaWidgetId !== null) {
-                grecaptcha.reset(recaptchaWidgetId);
+              
+              // Reset reCAPTCHA if available
+              if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
+                try {
+                  grecaptcha.reset(recaptchaWidgetId);
+                } catch (err) {
+                  console.warn('Could not reset reCAPTCHA:', err);
+                }
               }
               
               // Reset OTP verification state
@@ -671,7 +685,6 @@
               sendOtpSection.style.display = "block";
               sendOtpBtn.disabled = false;
               sendOtpBtn.textContent = "Send OTP to Email";
-              signUpBtn.disabled = true;
               otpStatus.textContent = "";
               
             } catch (err) {
@@ -1152,7 +1165,7 @@
               <button id="reload-recaptcha" type="button" class="link-btn" style="display:none; margin-top: 5px;">Reload reCAPTCHA</button>
 
               <div class="form-element form-submit">
-                <button id="signUp" class="signup" type="button" disabled>Sign up</button>
+                <button id="signUp" class="signup" type="button">Sign up</button>
                 <button id="goLeft" class="signup off" type="button">Log In</button>
               </div>
             </form>

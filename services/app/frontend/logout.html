@@ -60,7 +60,7 @@
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding: 50px 0 0;
+      padding: 100px 0 20px 0;
     }
 
     .dashboard-container {
@@ -78,10 +78,19 @@
 
     /* Top Navigation Bar */
     .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 50px;
+      padding: 15px 40px;
+      background: rgba(9, 13, 32, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(143, 148, 251, 0.3);
+      z-index: 1000;
+      margin-bottom: 0 !important;
     }
 
     .brand img {
@@ -253,7 +262,7 @@
                   radial-gradient(circle at bottom right, #ff00d433, #000814 60%),
                   #000814 !important;
       color: #ffffff;
-      padding: 10px 0 !important;  /* bring card closer to top */
+      padding: 100px 0 20px 0 !important;
       justify-content: center;
       align-items: flex-start;
     }
@@ -265,7 +274,7 @@
       border: 1px solid rgba(143, 148, 251, 0.3) !important;
       box-shadow: 0 22px 45px rgba(104, 74, 255, 0.25) !important;
       color: #ffffff !important;
-      margin-top: 4px !important;
+      margin-top: 100px !important;
       padding: 40px 60px !important;
       box-sizing: border-box !important;
     }
@@ -291,7 +300,7 @@
 
     /* Navbar – pill buttons like other pages */
     .topbar {
-      margin-bottom: 16px !important;
+      margin-bottom: 0 !important;
     }
 
     .nav-menu {
@@ -329,15 +338,15 @@
     }
 
     .topbar .logout-btn {
-      background: #ff5b5b !important;
+      background: linear-gradient(135deg, #dc3545, #c82333) !important;
       color: #ffffff !important;
-      box-shadow: 0 10px 24px rgba(255, 91, 91, 0.45) !important;
+      box-shadow: 0 10px 24px rgba(220, 53, 69, 0.4) !important;
       padding: 8px 20px !important;
     }
 
     .topbar .logout-btn:hover {
-      background: #ff4242 !important;
-      box-shadow: 0 14px 34px rgba(255, 66, 66, 0.7) !important;
+      background: linear-gradient(135deg, #e04b59, #d42a3a) !important;
+      box-shadow: 0 14px 34px rgba(220, 53, 69, 0.6) !important;
     }
 
     /* Logout card in dark glass style */
@@ -389,7 +398,6 @@
         <a href="/frontend/account.html"><i class="fa fa-user-circle"></i> My Account</a>
         <a href="/frontend/createshipments.html"><i class="fa fa-plus"></i> Create Shipment</a>
         <a href="/frontend/shipments.html"><i class="fa fa-box"></i> My Shipments</a>
-        <a href="/frontend/live_streaming.html"><i class="fa fa-microchip"></i> Live Streaming</a>
         
       </nav>
     </header>
@@ -509,6 +517,23 @@
         }
       } catch (error) {
         console.error("Error verifying token:", error);
+      }
+    });
+    
+    // Role-based navigation visibility
+    window.addEventListener('load', function() {
+      const userRole = localStorage.getItem("user_role") || "user";
+      const liveStreamingNav = document.getElementById("nav-live-streaming");
+      const manageUsersNav = document.getElementById("nav-manage-users");
+      
+      if (userRole === "admin") {
+        // Admin: Show all navigation items
+        if (liveStreamingNav) liveStreamingNav.style.display = "flex";
+        if (manageUsersNav) manageUsersNav.style.display = "flex";
+      } else {
+        // Regular user: Hide Live Streaming and Manage Users
+        if (liveStreamingNav) liveStreamingNav.style.display = "none";
+        if (manageUsersNav) manageUsersNav.style.display = "none";
       }
     });
   </script>
